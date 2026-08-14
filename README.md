@@ -4,7 +4,7 @@
 
 > *Not what happened. Why it happened. What happens next.*
 
-Most AI agent tutorials teach you to wire an LLM to an API and call it done. The result is a chatbot that retrieves data and parrots it back. This workshop teaches something harder: how to build agents that **reason causally** about data — contextualizing metrics, distinguishing correlation from causation, and communicating confidence honestly.
+Most AI agent tutorials teach you to wire an LLM to an API and call it done. The result is a chatbot that retrieves data and parrots it back. This workshop teaches something deeper: how to build agents that **reason causally** about data — contextualizing metrics, distinguishing correlation from causation, and communicating confidence honestly.
 
 **Domain:** Open-source project health (GitHub)  
 **LLM:** Groq API — free, no credit card  
@@ -33,16 +33,20 @@ No prior Python or terminal experience required — this guide installs everythi
 
 ---
 
+
+
 ### New to the terminal?
 
 The **terminal** (also called the **command line** or **shell**) is a text-based way to talk to your computer. Instead of clicking buttons, you type commands and press **Enter**. This workshop uses it to install tools and run Python code.
 
 **How to open a terminal**
 
-| Platform | Easiest option (use this for the workshop) | Alternative |
-|----------|--------------------------------------------|-------------|
-| **macOS** | In Cursor: **View → Terminal**, or press `` Cmd+` `` | Open **Terminal** from Applications → Utilities |
-| **Windows** | In Cursor: **View → Terminal**, or press `` Ctrl+` `` | Press the **Windows key**, type `PowerShell`, open **Windows PowerShell** |
+
+| Platform    | Easiest option (use this for the workshop)        | Alternative                                                               |
+| ----------- | ------------------------------------------------- | ------------------------------------------------------------------------- |
+| **macOS**   | In Cursor: **View → Terminal**, or press `Cmd+``  | Open **Terminal** from Applications → Utilities                           |
+| **Windows** | In Cursor: **View → Terminal**, or press `Ctrl+`` | Press the **Windows key**, type `PowerShell`, open **Windows PowerShell** |
+
 
 A panel opens at the bottom of the screen with a blinking cursor. That is your terminal.
 
@@ -51,21 +55,23 @@ A panel opens at the bottom of the screen with a blinking cursor. That is your t
 1. **Copy** the command from this guide (click the copy icon on the code block).
 2. **Click inside the terminal** so it is focused.
 3. **Paste** the command:
-   - macOS: `` Cmd+V ``
-   - Windows: `` Ctrl+V `` (or right-click → Paste in PowerShell)
+  - macOS: `Cmd+V`
+  - Windows: `Ctrl+V` (or right-click → Paste in PowerShell)
 4. Press **Enter**.
 5. Wait for the command to finish. A new line with a cursor means it is ready for the next command.
 
 **A few things to know**
 
-- **Do not type the `$` or `>`** at the start of example lines — those just show where the prompt is.
+- **Do not type the** `$` **or** `>` at the start of example lines — those just show where the prompt is.
 - **One command at a time.** Run each code block separately unless the guide says otherwise.
-- **`cd` means "go to this folder."** Example: `cd causal-agent-workshop` moves you into that project folder.
+- `cd` **means "go to this folder."** Example: `cd causal-agent-workshop` moves you into that project folder.
 - **Errors are normal while learning.** Read the last few lines of output — they usually say what went wrong. See [Troubleshooting](#troubleshooting) at the bottom of this page.
 
 > **Tip:** Complete Step 1 (install Cursor) first, then use **Cursor's integrated terminal** for every step below. You can keep the editor and terminal in one window.
 
 ---
+
+
 
 ### Step 1: Install Cursor
 
@@ -119,7 +125,7 @@ winget install --id Git.Git -e --source winget
 
 If prompted, type `Y` and press **Enter** to confirm.
 
-Close and reopen your terminal after installation (in Cursor: click the trash-can icon on the terminal panel, then open a new terminal with `` Ctrl+` `` or `` Cmd+` ``).
+Close and reopen your terminal after installation (in Cursor: click the trash-can icon on the terminal panel, then open a new terminal with `Ctrl+`` or` Cmd+``).
 
 **Verify (both platforms):**
 
@@ -130,6 +136,8 @@ git --version
 You should see a version number (for example, `git version 2.47.0`). If you see `command not found`, close and reopen the terminal and try again.
 
 ---
+
+
 
 ### Step 3: Install uv and Python
 
@@ -179,9 +187,11 @@ You should see `3.12` listed. You do not need to run `python` or `pip` directly 
 
 ---
 
+
+
 ### Step 4: Clone This Repository
 
-In Cursor, open the integrated terminal (**View → Terminal**, or `` Ctrl+` `` on Windows / `` Cmd+` `` on macOS).
+In Cursor, open the integrated terminal (**View → Terminal**, or `Ctrl+`` on Windows /` Cmd+`` on macOS).
 
 **Clone** means "download a copy of the project from the internet." Run these commands one at a time:
 
@@ -206,38 +216,9 @@ uv sync
 
 
 
-### Step 5: Get a GitHub Personal Access Token (Free)
+### Step 5: Create the `.env` File
 
-1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
-2. Click **Generate new token (classic)**
-3. Name: `workshop`
-4. Scopes: check only **public_repo**
-5. Click **Generate token** and **copy it immediately**
-
-This gives you 5,000 API requests/hour. The workshop uses ~200.
-
----
-
-
-
-### Step 6: Get a Groq API Key (Free, No Credit Card)
-
-1. Go to [console.groq.com](https://console.groq.com)
-2. Sign up with email or Google — **no credit card required**
-3. Go to **API Keys** in the left sidebar
-4. Click **Create API Key**, name it `workshop`, and copy it
-
-Groq gives you 14,400 requests/day on the free tier. The workshop uses ~30.
-
----
-
-
-
-### Step 7: Set Environment Variables
-
-You need both tokens saved in a file so the workshop code can find them.
-
-#### Option A: Use a `.env` file (recommended)
+The workshop code reads API keys from a `.env` file in the project root. Create it now so you have somewhere to paste each key as you get it.
 
 **Using the terminal** — make sure you are in the project root (the folder containing `src/`), then run:
 
@@ -258,50 +239,63 @@ Copy-Item .env.sample .env
 3. Right-click in the folder → **Paste**
 4. Rename the copy to `.env`
 
-**Edit the file:**
+Now open `.env` by clicking it in the file explorer. You will see placeholder values — you will replace them in the next two steps.
 
-1. Click `.env` in the file explorer to open it
-2. Replace `ghp_your_token_here` with your GitHub token from Step 5
-3. Replace `gsk_your_key_here` with your Groq key from Step 6
-4. Save the file (**File → Save**, or `` Cmd+S `` / `` Ctrl+S ``)
+The project loads `.env` automatically. **Never commit your** `.env` **file** — it is already in `.gitignore`.
 
-The file should look like this (with your real tokens):
+---
+
+
+
+### Step 6: Get a GitHub Personal Access Token (Free)
+
+1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+2. Click **Generate new token (classic)**
+3. Name: `workshop`
+4. Scopes: check only **public_repo**
+5. Click **Generate token** and **copy it immediately**
+6. Switch back to Cursor, open `.env`, and replace `ghp_your_token_here` with the token you just copied
+7. Save the file (`Cmd+S` / `Ctrl+S`)
+
+This gives you 5,000 API requests/hour. The workshop uses ~200.
+
+---
+
+
+
+### Step 7: Get a Groq API Key (Free, No Credit Card)
+
+1. Go to [console.groq.com](https://console.groq.com)
+2. Sign up with email or Google — **no credit card required**
+3. Go to **API Keys** at the top right
+4. Click **Create API Key**, name it `workshop`, and copy it
+5. Switch back to Cursor, open `.env`, and replace `gsk_your_key_here` with the key you just copied
+6. Save the file (`Cmd+S` / `Ctrl+S`)
+
+Groq gives you 14,400 requests/day on the free tier. The workshop uses ~30.
+
+Your `.env` file should now look like this (with your real tokens):
 
 ```
 GITHUB_TOKEN=ghp_abc123...
 GROQ_API_KEY=gsk_xyz789...
 ```
 
-The project loads `.env` automatically. **Never commit your** `.env` **file** — it is already in `.gitignore`.
-
-#### Option B: Export in your shell (advanced)
-
-Only use this if you are comfortable with shell configuration. Most people should use Option A.
-
-**macOS / Linux (current session):**
-
-```bash
-export GITHUB_TOKEN="ghp_your_token_here"
-export GROQ_API_KEY="gsk_your_key_here"
-```
-
-To persist, add those lines to `~/.zshrc`, then run `source ~/.zshrc`.
-
-**Windows (PowerShell — current session):**
-
-```powershell
-$env:GITHUB_TOKEN = "ghp_your_token_here"
-$env:GROQ_API_KEY = "gsk_your_key_here"
-```
-
-To persist on Windows, use **System Settings → Environment Variables**, or:
-
-```powershell
-[System.Environment]::SetEnvironmentVariable("GITHUB_TOKEN", "ghp_your_token_here", "User")
-[System.Environment]::SetEnvironmentVariable("GROQ_API_KEY", "gsk_your_key_here", "User")
-```
-
-Then restart your terminal.
+> **Alternative (advanced):** If you prefer shell environment variables over a `.env` file, you can export them directly:
+>
+> ```bash
+> # macOS / Linux
+> export GITHUB_TOKEN="ghp_your_token_here"
+> export GROQ_API_KEY="gsk_your_key_here"
+> ```
+>
+> ```powershell
+> # Windows PowerShell
+> $env:GITHUB_TOKEN = "ghp_your_token_here"
+> $env:GROQ_API_KEY = "gsk_your_key_here"
+> ```
+>
+> These only last for the current session. To persist, add them to `~/.zshrc` (macOS/Linux) or use **System Settings → Environment Variables** (Windows).
 
 ---
 
@@ -312,7 +306,7 @@ Then restart your terminal.
 Make sure your terminal is in the project root (the folder containing `src/`), then run:
 
 ```bash
-uv run --directory src python verify.py
+uv run src/verify.py
 ```
 
 If you see `No such file or directory`, make sure you cloned the repo and are in the project root (the folder containing `src/`).
@@ -320,17 +314,15 @@ If you see `No such file or directory`, make sure you cloned the repo and are in
 Expected output:
 
 ```
-GitHub OK: pallets/flask (69042 stars)
+GitHub OK: pallets/flask (xxxxx stars)
 Groq OK: ready
 ```
 
-The star count may differ — that is fine. Both lines should start with `GitHub OK` and `Groq OK`.
-
 If either line fails:
 
-- Re-check that `.env` exists and has your real tokens (no extra spaces or quotes)
-- macOS: `echo $GITHUB_TOKEN` and `echo $GROQ_API_KEY` — each should print your token
-- Windows: `echo $env:GITHUB_TOKEN` and `echo $env:GROQ_API_KEY`
+- Open `.env` in Cursor and check that both tokens are present, with no extra spaces or quotes around the values
+- Make sure the file is named exactly `.env` (not `.env.sample`, not `env.txt`)
+- If you used shell exports instead of `.env`, verify they are set: `echo $GITHUB_TOKEN` (macOS/Linux) or `echo $env:GITHUB_TOKEN` (Windows PowerShell)
 
 ---
 
@@ -342,35 +334,56 @@ The hands-on walkthrough is in **[docs/workshop-guide.md](docs/workshop-guide.md
 
 ### Quick reference
 
-| Part | File | What you build |
-|------|------|----------------|
-| Setup | `src/verify.py` | Confirm GitHub + Groq access |
-| Part 1 | `src/tools.py` | `get_repo_health` with contextual benchmarks |
-| Part 2 | `src/tools.py` | `analyze_causal_patterns` causal reasoning layer |
-| Part 3 | `src/agent.py` | Full Groq agent with function calling |
-| Part 4 | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill |
+
+| Part   | File                                  | What you build                                   |
+| ------ | ------------------------------------- | ------------------------------------------------ |
+| Setup  | `src/verify.py`                       | Confirm GitHub + Groq access                     |
+| Part 1 | `src/tools.py`                        | `get_repo_health` with contextual benchmarks     |
+| Part 2 | `src/tools.py`                        | `analyze_causal_patterns` causal reasoning layer |
+| Part 3 | `src/agent.py`                        | Full Groq agent with function calling            |
+| Part 4 | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill                             |
+
+
+
 
 ### Project structure
 
+After setup, the repo looks like this. Files you create during the workshop are marked with **← you create**.
+
 ```
 causal-agent-workshop/
-├── README.md                         # Setup instructions (this file)
-├── .env.sample                       # Template for API keys
+├── .venv/                             # ← created by uv sync (virtual environment)
 ├── docs/
-│   └── workshop-guide.md             # Hands-on workshop (ADLC-aligned)
-├── src/
-│   ├── verify.py                     # Setup verification
-│   ├── tools.py                      # Parts 1 + 2 (you implement these)
-│   └── agent.py                      # Part 3 (you create this)
-├── solutions/                        # Instructor reference (optional)
-│   ├── tools.py
+│   └── workshop-guide.md              # Hands-on workshop (ADLC-aligned)
+├── solutions/                         # Instructor reference (optional)
+│   ├── skills/
+│   │   └── repo-health-analyst/
+│   │       ├── scripts/
+│   │       │   └── tools.py
+│   │       └── SKILL.md
+│   ├── README.md
 │   ├── agent.py
-│   └── skills/repo-health-analyst/
+│   ├── tools.py
+│   └── verify.py
+├── src/
+│   ├── agent.py                       # ← you create in Part 3
+│   ├── tools.py                       # Parts 1 + 2 (you implement these)
+│   └── verify.py                      # Setup verification
+├── .cursor/skills/                    # ← you create in Part 4
+│   └── repo-health-analyst/
+│       ├── scripts/
+│       │   └── tools.py
+│       └── SKILL.md
+├── .env                               # ← you create in Step 5 (from .env.sample)
+├── .env.sample                        # Template for API keys
+├── .gitignore
+├── .python-version
+├── README.md                          # Setup instructions (this file)
 ├── pyproject.toml
-├── uv.lock
-└── .cursor/skills/                   # Part 4 (you create during workshop)
-    └── repo-health-analyst/
+└── uv.lock
 ```
+
+
 
 ### Commands
 
@@ -378,14 +391,14 @@ Open the terminal in Cursor from the **project root**, then run these **one at a
 
 ```bash
 # Verify setup
-uv run --directory src python verify.py
+uv run src/verify.py
 
 # After completing Parts 1–2 — test health metrics
-uv run --directory src python -c "from tools import get_repo_health; import json; print(json.dumps(get_repo_health('pallets', 'flask'), indent=2, default=str))"
+uv run --directory src python -c "from tools import get_repo_health; import json; print(json.dumps(get_repo_health('pallets','flask'), indent=2, default=str))"
 
 # After completing Part 3 — run the causal agent
-uv run --directory src python agent.py
-uv run --directory src python agent.py "Analyze the health of facebook/react"
+uv run src/agent.py
+uv run src/agent.py "Analyze the health of facebook/react"
 
 # After completing Part 4 — run skill scripts
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
@@ -398,17 +411,29 @@ uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets
 
 ## Troubleshooting
 
+### Use Cursor to help you debug
+
+If you run into an error, Cursor can help you figure it out:
+
+1. **Highlight** the error text in the terminal or the problematic code in the editor
+2. Press `Cmd+L` (macOS) or `Ctrl+L` (Windows) — this sends the highlighted text to Cursor's chat panel
+3. Ask something like "What does this error mean?" or "How do I fix this?" or just hit enter.
+
+Cursor can see your project files, so it often gives you a specific fix rather than a generic answer. This works for terminal errors, Python tracebacks, unexpected output — anything you can select.
+
+### Common issues
+
 **I don't know if I'm in the right folder**  
-Run `pwd` (macOS) or `cd` (Windows) to see your current folder. You should see a path ending in `causal-agent-workshop` and contain a `src/` folder. If not, run `cd causal-agent-workshop`.
+Run `pwd` (macOS) or `cd` (Windows) to see your current folder. The path should end in `causal-agent-workshop`. If it does not, run `cd causal-agent-workshop`. You can also run `ls` (macOS) or `dir` (Windows) to confirm you see `src/`, `docs/`, and `README.md` in the listing.
 
 **Nothing happens when I paste a command**  
 Click inside the terminal panel first so the cursor is blinking there, then paste and press **Enter**.
 
-**`command not found` after installing something**  
-Close the terminal and open a new one (trash-can icon → `` Ctrl+` `` or `` Cmd+` ``), then try again.
+`command not found` **after installing something**  
+Close the terminal and open a new one (trash-can icon → `Ctrl+`` or` Cmd+``), then try again.
 
 `ModuleNotFoundError: No module named 'groq'`  
-You ran `python` directly instead of `uv run python`. Always use `uv run`.
+You ran `python` directly instead of `uv run`. Running `python src/verify.py` uses whatever Python is installed on your system, which does not have the workshop's packages. Running `uv run src/verify.py` uses the project's virtual environment (`.venv/`) where all the packages were installed by `uv sync`. Always use `uv run`.
 
 `401 Bad credentials` **from GitHub**  
 Your `GITHUB_TOKEN` is missing, expired, or incorrect. Re-check your `.env` file or shell exports.
@@ -422,11 +447,11 @@ Stats endpoints compute on first request and may return empty. Wait 5 seconds an
 **Groq returns** `rate_limit_exceeded`  
 The free tier allows 30 requests/minute. Wait 60 seconds and retry.
 
-**`uv: command not found`**  
+`uv: command not found`  
 Close and reopen your terminal after installing uv. On macOS, run `brew install uv` again. On Windows, run the winget command from Step 3 again.
 
-**`python: command not found`**  
-You do not need a system-wide `python` command. Run `uv python install 3.12`, then always use `uv run --directory src python` for workshop scripts.
+`python: command not found`  
+You do not need a system-wide `python` command. Run `uv python install 3.12`, then always use `uv run src/script.py` for workshop scripts.
 
 ---
 

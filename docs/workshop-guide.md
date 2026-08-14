@@ -10,7 +10,7 @@ A 90-minute hands-on workshop on building agents that reason about data — not 
 
 ## Who this is for
 
-You should be comfortable writing basic Python (functions, dictionaries, imports) and running commands in a terminal. You do **not** need a computer science degree, statistics coursework, or prior experience building AI agents.
+No prior Python or terminal experience is required. The [README](../README.md) covers everything you need to get started, including how to use the terminal and run commands.
 
 **Before you begin:** Complete setup in the [README](../README.md). You need Cursor, API keys, and a successful run of `verify.py`.
 
@@ -70,17 +70,16 @@ Each part below calls out which ADLC phase you are in and what deliverable you a
 From the project root:
 
 ```bash
-uv run --directory src python verify.py
+uv run src/verify.py
 ```
 
 **Success looks like:**
 
 ```
-GitHub OK: pallets/flask (… stars)
+GitHub OK: pallets/flask (xxxxx stars)
 Groq OK: ready
 ```
-
-The star count can differ. Both lines must say `OK`.
+Both lines must say `OK`.
 
 Open `src/tools.py`. You will implement the functions marked `NotImplementedError` during Parts 1 and 2.
 
@@ -105,20 +104,33 @@ This workshop builds an **intelligence agent** — one that grounds every claim 
 | Data layer (your Python code) | Intelligence layer (the LLM) |
 |---|---|
 | Numbers, flags, z-scores | What those numbers mean for the user |
-| Historical benchmarks | Whether a deviation matters |
-| Causal pathway evidence | Which explanation is most plausible |
+| Historical benchmarks | Whether a deviation matters given relevant context |
+| Causal pathway evidence | Which explanation best fits the evidence |
 | Methodology notes ("Tier 2 pattern match") | Narrative synthesis |
 
-**Rule of thumb:** If it could be wrong in a spreadsheet, it belongs in Python. If it requires judgment, it belongs in the LLM.
+**Think about it:** Look at the right column. What is the LLM using to make each of those judgments? What happens to the agent's output if the left column is missing, wrong, or incomplete?
+
+**Rule of thumb:** If it could be wrong in a spreadsheet, it belongs in Python. If it requires judgment, it belongs in the LLM — but only if the data layer gives it something to judge and the right context needed to make a sound judgement.
 
 ### ADLC planning checklist (for this agent)
 
-Before you write code, you should be able to answer:
+Here is what we are building. In a real project, you would figure these out yourself before writing code:
 
-- [ ] **Problem:** Help someone evaluate open-source project health on GitHub
-- [ ] **Inputs:** Repository owner + name (e.g. `pallets/flask`)
-- [ ] **Outputs:** Structured metrics, causal evidence, narrative briefing
-- [ ] **Success:** Agent never quotes a metric it did not retrieve; causal claims include evidence tier + alternative
+- **Problem:** Help someone evaluate open-source project health on GitHub
+- **Inputs:** Repository owner + name (e.g. `pallets/flask`)
+- **Outputs:** Structured metrics, causal evidence, narrative briefing
+- **Success:** Agent never quotes a metric it did not retrieve; causal claims include evidence tier + alternative
+
+---
+
+### How Parts 1 and 2 work
+
+Each part gives you two ways to implement the code:
+
+- **Option A: Copy the code** — A complete, working code block you paste into `src/tools.py`. This gets you running immediately so you can focus on understanding.
+- **Option B: Let Cursor write it** — A plain-English description of the same logic. Highlight it along with the skeleton function in `src/tools.py`, send both to Cursor (`Cmd+L` / `Ctrl+L`), and ask it to implement the function. Compare what Cursor generates to the working code in Option A.
+
+You can do both — paste the code first, then read the description and try Option B to see how Cursor's version compares. This is how you learn to evaluate AI-generated code against a known-good reference.
 
 ---
 
@@ -133,76 +145,135 @@ Before you write code, you should be able to answer:
 
 "This repo had 47 commits last month" is useless without context. Your job is to return **numbers plus benchmarks** so the LLM never has to guess.
 
-### Step-by-step
+### Two ways to implement
 
-#### 1. Fetch the repository
+Pick one:
 
-The GitHub client `gh` is already set up. Get the repo object:
+1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`. This gets you running immediately so you can focus on understanding the logic.
+2. **Option B: Let Cursor write it** — Skip to ["What that code does"](#what-that-code-does-in-plain-english), highlight the plain-English description along with the skeleton function in `src/tools.py`, send both to Cursor (`Cmd+L` / `Ctrl+L`), and ask it to implement the function. Compare what it generates to the working code in Option A.
 
-```python
-r = gh.get_repo(f"{owner}/{repo}")
-now = datetime.now(timezone.utc)
-```
+### Option A: The code
 
-#### 2. Get weekly commit counts
+Open `src/tools.py` in Cursor. You will see a skeleton with some starter code already in place. Replace the `get_repo_health` function and the `_classify_trend` stub with the code below. Copy and paste the entire block:
 
 ```python
-stats = r.get_stats_commit_activity()
-weekly_commits = [week.total for week in stats] if stats else []
+def get_repo_health(owner: str, repo: str) -> dict:
+    """Retrieve health metrics with historical reference context.
+
+    Returns structured data with indicator flags.
+    Does NOT return opinions, recommendations, or severity labels.
+    """
+    # 1. Fetch the repository
+    r = gh.get_repo(f"{owner}/{repo}")
+    now = datetime.now(timezone.utc)
+
+    # 2. Get weekly commit counts
+    stats = r.get_stats_commit_activity()
+    weekly_commits = [week.total for week in stats] if stats else []
+
+    # 3. Compute recent vs. historical activity (z-score)
+    recent_4w = weekly_commits[-4:] if len(weekly_commits) >= 4 else weekly_commits
+    recent_avg = statistics.mean(recent_4w) if recent_4w else 0
+
+    hist_mean = statistics.mean(weekly_commits) if weekly_commits else 0
+    hist_stdev = statistics.stdev(weekly_commits) if len(weekly_commits) >= 2 else 1.0
+    z_score = (recent_avg - hist_mean) / hist_stdev if hist_stdev > 0 else 0.0
+
+    # 4. Contributor concentration ("bus factor")
+    contributors = list(r.get_stats_contributors() or [])
+    if contributors:
+        total_commits = sum(c.total for c in contributors)
+        top_contributor_share = (
+            max(c.total for c in contributors) / total_commits if total_commits else 0
+        )
+    else:
+        total_commits = 0
+        top_contributor_share = 0
+
+    # 5. Issue health (last 90 days, excluding pull requests)
+    recent_issues = list(r.get_issues(state="all", since=now - timedelta(days=90)))
+    open_issues = [i for i in recent_issues if i.state == "open" and i.pull_request is None]
+    closed_issues = [i for i in recent_issues if i.state == "closed" and i.pull_request is None]
+
+    # 6. Return a dictionary — facts only, no opinions
+    return {
+        "repository": f"{owner}/{repo}",
+        "stars": r.stargazers_count,
+        "forks": r.forks_count,
+        "metrics": {
+            "commit_activity": {
+                "recent_weekly_avg": round(recent_avg, 1),
+                "historical_weekly_avg": round(hist_mean, 1),
+                "z_score": round(z_score, 2),
+                "trend": _classify_trend(weekly_commits),
+                "weeks_observed": len(weekly_commits),
+            },
+            "contributor_concentration": {
+                "total_contributors": len(contributors),
+                "top_contributor_share": round(top_contributor_share, 2),
+            },
+            "issue_health": {
+                "open_issues_90d": len(open_issues),
+                "closed_issues_90d": len(closed_issues),
+                "close_ratio": round(
+                    len(closed_issues) / max(len(open_issues) + len(closed_issues), 1), 2
+                ),
+            },
+        },
+        "indicator_flags": {
+            "is_active": recent_avg > 0,
+            "is_declining": z_score < -1.0,
+            "has_bus_factor_risk": top_contributor_share > 0.50,
+            "has_issue_backlog": len(open_issues) > len(closed_issues),
+        },
+        "retrieved_at": now.isoformat(),
+    }
+
+
+def _classify_trend(weekly: list[int]) -> str:
+    """Split weekly commits in half, compare averages, return a trend label."""
+    if len(weekly) < 8:
+        return "insufficient_data"
+    first_half = statistics.mean(weekly[: len(weekly) // 2])
+    second_half = statistics.mean(weekly[len(weekly) // 2 :])
+    ratio = second_half / first_half if first_half > 0 else 1.0
+    if ratio > 1.2:
+        return "accelerating"
+    if ratio > 0.9:
+        return "stable"
+    if ratio > 0.6:
+        return "slowing"
+    return "declining"
 ```
 
-> **First request may return empty data** while GitHub computes stats. Wait 5 seconds and run your checkpoint again.
+> **Note:** The first time you call the GitHub stats API for a given repo, it may return empty data while GitHub computes the results. If that happens when you test, wait 5 seconds and try again.
 
-#### 3. Compute recent vs. historical activity
+### Option B: What that code does (in plain English)
 
-| Variable | How to calculate |
-|----------|------------------|
-| `recent_avg` | Mean of the last 4 weeks |
-| `hist_mean` | Mean of all weeks |
-| `hist_stdev` | Standard deviation (use `1.0` if fewer than 2 weeks) |
-| `z_score` | `(recent_avg - hist_mean) / hist_stdev` |
+If you chose Option A, read through this to understand what you pasted. If you chose Option B, highlight the text below along with the skeleton function in `src/tools.py`, press `Cmd+L` (macOS) or `Ctrl+L` (Windows), and ask Cursor to implement it. The skeleton already has the function name, arguments, and docstring — Cursor just needs the logic.
 
-**Z-score in plain English:** How unusual is recent activity compared to this repo's own history? A z-score of -1.5 means "noticeably below normal for this project."
+The function should retrieve health metrics for a GitHub repository and return structured data with indicator flags. It should not return opinions, recommendations, or severity labels.
 
-#### 4. Contributor concentration ("bus factor")
+1. **Fetch the repository** using the GitHub client and record the current UTC time.
 
-```python
-contributors = list(r.get_stats_contributors() or [])
-```
+2. **Get weekly commit counts** from GitHub's commit activity stats. This returns up to 52 weeks of data.
 
-Calculate `top_contributor_share` — what fraction of commits came from the single busiest contributor?
+3. **Compute recent vs. historical activity.** Average the last 4 weeks (`recent_avg`), average all weeks (`hist_mean`), and compute a z-score: `(recent_avg - hist_mean) / hist_stdev`. The z-score tells you how unusual recent activity is compared to this repo's own history. A z-score of -1.5 means "noticeably below normal for this project." Use a standard deviation floor of `1.0` if fewer than 2 weeks of data.
 
-#### 5. Issue health (last 90 days)
+4. **Measure contributor concentration ("bus factor").** Get all contributors and calculate `top_contributor_share` — what fraction of total commits came from the single busiest contributor.
 
-Fetch issues, **exclude pull requests**, count open vs. closed. Compute `close_ratio`.
+5. **Check issue health for the last 90 days.** Fetch all issues, exclude pull requests, count open vs. closed, and compute a `close_ratio`.
 
-#### 6. Return a dictionary — facts only
+6. **Return a dictionary of facts only — no opinions.** The return value includes: `repository`, `stars`, `forks`, nested `metrics` (commit activity, contributor concentration, issue health), boolean `indicator_flags`, and a `retrieved_at` timestamp. The indicator flags are booleans, not subjective labels like "unhealthy" or "concerning":
 
-Your return value must include:
-
-```
-repository, stars, forks
-metrics.commit_activity     → recent_weekly_avg, historical_weekly_avg, z_score, trend, weeks_observed
-metrics.contributor_concentration → total_contributors, top_contributor_share
-metrics.issue_health        → open_issues_90d, closed_issues_90d, close_ratio
-indicator_flags           → is_active, is_declining, has_bus_factor_risk, has_issue_backlog
-retrieved_at                → ISO timestamp
-```
-
-**Indicator flags are boolean facts** — not opinions:
-
-| Flag | True when… |
+| Flag | True when... |
 |------|------------|
 | `is_active` | Recent weekly average > 0 |
 | `is_declining` | z-score < -1.0 |
 | `has_bus_factor_risk` | Top contributor share > 50% |
 | `has_issue_backlog` | More open than closed issues |
 
-Do **not** return words like "unhealthy", "concerning", or "you should switch libraries."
-
-#### 7. Implement `_classify_trend(weekly)`
-
-Split the weekly list in half. Compare averages. Return:
+**`_classify_trend(weekly)`** classifies the commit trend by splitting the weekly list in half and comparing the averages:
 
 | Condition | Label |
 |-----------|-------|
@@ -212,7 +283,7 @@ Split the weekly list in half. Compare averages. Return:
 | Ratio > 0.6 | `slowing` |
 | Otherwise | `declining` |
 
-### Checkpoint ✓
+### Checkpoint
 
 ```bash
 uv run --directory src python -c "from tools import get_repo_health; import json; print(json.dumps(get_repo_health('pallets', 'flask'), indent=2, default=str))"
@@ -247,45 +318,194 @@ Part 1 tells you *what* is happening. Causal reasoning asks *why* — and requir
 
 This workshop operates at **pattern matching** (Tier 2) — not proof.
 
-### Step-by-step
+### Two ways to implement
 
-#### 1. Define `CAUSAL_PATHWAYS`
+Same choice as Part 1:
 
-A list of dicts. Each pathway describes a known cause-effect chain in open-source projects.
+1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`.
+2. **Option B: Let Cursor write it** — Skip to ["What that code does"](#option-b-what-that-code-does-in-plain-english-1), highlight the description along with the skeleton stubs in `src/tools.py`, and let Cursor implement them.
 
-Build two pathways:
+### Option A: The code
 
-**Pathway 001 — Maintainer Departure Cascade**
+Still in `src/tools.py`, replace the `analyze_causal_patterns` and `_get_alternative` stubs with the code below. Paste it after the `_classify_trend` function you added in Part 1. You also need to add the `CAUSAL_PATHWAYS` data structure — paste it between `_classify_trend` and `analyze_causal_patterns`:
 
-Maintainer stops contributing → reviews slow → fewer external contributors
+```python
+CAUSAL_PATHWAYS = [
+    {
+        "id": "pathway_001",
+        "name": "Maintainer Departure Cascade",
+        "mechanism": (
+            "When a core maintainer stops contributing, pull request reviews "
+            "slow down. Slower reviews discourage external contributors from "
+            "submitting PRs. Fewer contributors leads to slower issue resolution "
+            "and reduced project visibility."
+        ),
+        "nodes": ["maintainer_inactive", "review_slowdown", "contributor_decline"],
+        "detection": {
+            "maintainer_inactive": "Top contributor's last commit > 90 days ago",
+            "review_slowdown": "Median days-to-merge increased > 50% vs. 6-month prior",
+            "contributor_decline": "Unique contributors this quarter < prior quarter",
+        },
+        "evidence_tier": 2,
+        "confidence_base": 0.55,
+    },
+    {
+        "id": "pathway_002",
+        "name": "Release Drought",
+        "mechanism": (
+            "When a project goes 90+ days without a release, downstream "
+            "dependents pin to old versions. Pinned versions reduce new "
+            "adoption and increase forks as users patch independently."
+        ),
+        "nodes": ["no_recent_release", "adoption_stall", "fork_surge"],
+        "detection": {
+            "no_recent_release": "Last release > 90 days ago",
+            "adoption_stall": "Star growth rate declined",
+            "fork_surge": "Fork-to-star ratio increasing",
+        },
+        "evidence_tier": 2,
+        "confidence_base": 0.45,
+    },
+]
 
-**Pathway 002 — Release Drought**
 
-No release in 90+ days → adoption stalls → fork activity rises
+def analyze_causal_patterns(owner: str, repo: str) -> dict:
+    """Scan repo events for matches against known causal pathways.
 
-Each pathway needs: `id`, `name`, `mechanism`, `nodes`, `detection`, `evidence_tier` (use `2`), `confidence_base` (e.g. `0.55` and `0.45`).
+    Returns evidence for/against each pathway.
+    Does NOT return which pathway "matters most" — that is the LLM's job.
+    """
+    r = gh.get_repo(f"{owner}/{repo}")
+    now = datetime.now(timezone.utc)
 
-#### 2. Implement `analyze_causal_patterns(owner, repo)`
+    contributors = list(r.get_stats_contributors() or [])
+    releases = list(r.get_releases()[:5])
 
-For each pathway, check what you can observe in the data:
+    results = []
+    for pathway in CAUSAL_PATHWAYS:
+        observations = {}
 
-| Pathway | What to check |
+        if pathway["id"] == "pathway_001":
+            if contributors:
+                top = max(contributors, key=lambda c: c.total)
+                last_week = top.weeks[-1] if top.weeks else None
+                if last_week:
+                    week_start = datetime.fromtimestamp(last_week.w, tz=timezone.utc)
+                    days_since = (now - week_start).days
+                    observations["maintainer_inactive"] = {
+                        "detected": last_week.c == 0 and days_since > 7,
+                        "detail": f"Top contributor: {days_since} days since last active week",
+                    }
+
+                recent_contributors = set()
+                prior_contributors = set()
+                for c in contributors:
+                    for w in c.weeks[-13:]:
+                        if w.c > 0:
+                            recent_contributors.add(
+                                c.author.login if c.author else "unknown"
+                            )
+                    for w in c.weeks[-26:-13]:
+                        if w.c > 0:
+                            prior_contributors.add(
+                                c.author.login if c.author else "unknown"
+                            )
+
+                observations["contributor_decline"] = {
+                    "detected": len(recent_contributors) < len(prior_contributors),
+                    "detail": (
+                        f"Recent quarter: {len(recent_contributors)} contributors, "
+                        f"prior quarter: {len(prior_contributors)}"
+                    ),
+                }
+
+        elif pathway["id"] == "pathway_002":
+            if releases:
+                latest = releases[0]
+                days_since_release = (
+                    now - latest.created_at.replace(tzinfo=timezone.utc)
+                ).days
+                observations["no_recent_release"] = {
+                    "detected": days_since_release > 90,
+                    "detail": (
+                        f"Last release: {days_since_release} days ago "
+                        f"({latest.tag_name})"
+                    ),
+                }
+            else:
+                observations["no_recent_release"] = {
+                    "detected": True,
+                    "detail": "No releases found",
+                }
+
+        nodes_detected = sum(1 for o in observations.values() if o.get("detected"))
+        total_nodes = len(observations)
+
+        results.append({
+            "pathway": pathway["name"],
+            "mechanism": pathway["mechanism"],
+            "observations": observations,
+            "nodes_detected": nodes_detected,
+            "nodes_checked": total_nodes,
+            "match_strength": round(nodes_detected / max(total_nodes, 1), 2),
+            "evidence_tier": pathway["evidence_tier"],
+            "adjusted_confidence": round(
+                pathway["confidence_base"] * (nodes_detected / max(total_nodes, 1)), 2
+            ),
+            "alternative_explanation": _get_alternative(pathway["id"]),
+        })
+
+    return {
+        "repository": f"{owner}/{repo}",
+        "pathways_checked": len(results),
+        "results": results,
+        "retrieved_at": now.isoformat(),
+        "methodology": (
+            "Template matching against predefined causal DAGs. "
+            "Evidence tier 2 = pattern match (not statistical test). "
+            "Confidence is adjusted by the fraction of pathway nodes observed."
+        ),
+    }
+
+
+def _get_alternative(pathway_id: str) -> str:
+    """Every causal claim must acknowledge at least one alternative."""
+    alternatives = {
+        "pathway_001": (
+            "Seasonal variation: activity commonly drops in summer months "
+            "and around holidays. Check contributor timezone distribution."
+        ),
+        "pathway_002": (
+            "Intentional stability: mature projects may reduce release "
+            "frequency as the API stabilizes. Check if issue volume also declined."
+        ),
+    }
+    return alternatives.get(pathway_id, "No alternative identified.")
+```
+
+### Option B: What that code does (in plain English)
+
+If you chose Option A, read through this to understand what you pasted. If you chose Option B, highlight the text below along with the skeleton stubs in `src/tools.py`, press `Cmd+L` / `Ctrl+L`, and ask Cursor to implement them.
+
+**`CAUSAL_PATHWAYS`** is a list of known cause-effect chains in open-source projects. Each pathway has:
+
+- **Pathway 001 — Maintainer Departure Cascade:** A core maintainer stops contributing, which slows pull request reviews, which discourages external contributors, which leads to slower issue resolution.
+- **Pathway 002 — Release Drought:** A project goes 90+ days without a release, which causes downstream dependents to pin old versions, which reduces new adoption and increases forks.
+
+Each pathway includes an `id`, `name`, `mechanism` (the causal chain in plain English), `nodes` (the steps in the chain to check), `detection` rules, an `evidence_tier` of 2 (pattern match, not statistical proof), and a `confidence_base` score.
+
+**`analyze_causal_patterns(owner, repo)`** checks each pathway against real data from the repository:
+
+| Pathway | What it checks |
 |---------|---------------|
-| 001 | Top contributor's last active week; unique contributors this quarter vs. prior quarter |
-| 002 | Days since last release |
+| 001 | Whether the top contributor's last active week was recent; whether unique contributors this quarter declined compared to last quarter |
+| 002 | How many days since the last release |
 
-For each pathway, build a result dict with:
+For each pathway, it builds a result with: per-node `observations` (detected or not, with detail strings), counts of `nodes_detected` vs. `nodes_checked`, a `match_strength` ratio, the `evidence_tier`, an `adjusted_confidence` (base confidence scaled by match strength), and an `alternative_explanation`.
 
-- `observations` — per-node detected/not + detail string
-- `nodes_detected`, `nodes_checked`, `match_strength`
-- `adjusted_confidence` — base confidence × match strength
-- `alternative_explanation` — from `_get_alternative()`
+The function returns evidence, not conclusions. It does **not** pick a "winner" pathway — that is the LLM's job.
 
-**Return evidence, not conclusions.** Do not pick a "winner" pathway.
-
-#### 3. Implement `_get_alternative(pathway_id)`
-
-Every causal claim needs a competing explanation. Examples:
+**`_get_alternative(pathway_id)`** returns a competing explanation for each pathway. Every causal claim must acknowledge at least one alternative:
 
 - Pathway 001: seasonal slowdown (holidays, summer)
 - Pathway 002: intentional stability in a mature project
@@ -294,14 +514,14 @@ Every causal claim needs a competing explanation. Examples:
 
 | Tier | Strength | How to phrase it |
 |------|----------|------------------|
-| 1 | Temporal sequence | "Following X, we observed Y…" |
-| 2 | Pattern match | "This matches a known pattern…" |
-| 3 | Peer comparison | "Similar projects without X didn't show Y…" |
-| 4 | Statistical test | "Across N projects, X predicts Y (p < 0.05)…" |
+| 1 | Temporal sequence | "Following X, we observed Y..." |
+| 2 | Pattern match | "This matches a known pattern..." |
+| 3 | Peer comparison | "Similar projects without X didn't show Y..." |
+| 4 | Statistical test | "Across N projects, X predicts Y (p < 0.05)..." |
 
 Your tools are **Tier 2**. The LLM must say so.
 
-### Checkpoint ✓
+### Checkpoint
 
 ```bash
 uv run --directory src python -c "from tools import analyze_causal_patterns; import json; print(json.dumps(analyze_causal_patterns('pallets', 'flask'), indent=2, default=str))"
@@ -331,9 +551,16 @@ User question → LLM decides which tools to call → your Python runs → LLM s
 
 Plus a **naive agent** with no tools — for comparison. This is your evaluation harness.
 
-### Step-by-step
+### Two ways to implement
 
-#### 1. Create the file with imports
+Same choice as Parts 1 and 2:
+
+1. **Option A: Copy the code** — Paste the full working file below.
+2. **Option B: Let Cursor write it** — Skip to ["What that code does"](#option-b-what-that-code-does-in-plain-english-2), create an empty file, and let Cursor build it from the description.
+
+### Option A: The code
+
+Create a new file: in Cursor's file explorer, right-click the `src/` folder, choose **New File**, and name it `agent.py`. Paste the entire block below:
 
 ```python
 import json
@@ -346,73 +573,167 @@ from groq import Groq
 from tools import get_repo_health, analyze_causal_patterns
 
 load_dotenv()
+
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
-```
 
-#### 2. Define `TOOLS` — the LLM's menu
+# Tool schemas — the LLM's menu of available functions
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_repo_health",
+            "description": (
+                "Get health metrics for a GitHub repository with historical "
+                "reference distributions. Returns indicator flags (is_declining, "
+                "has_bus_factor_risk, etc.) and z-scores against the repo's own "
+                "history. Does NOT return opinions or recommendations."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "owner": {
+                        "type": "string",
+                        "description": "GitHub org or user (e.g. 'pallets')",
+                    },
+                    "repo": {
+                        "type": "string",
+                        "description": "Repository name (e.g. 'flask')",
+                    },
+                },
+                "required": ["owner", "repo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "analyze_causal_patterns",
+            "description": (
+                "Scan a GitHub repository's event timeline for matches against "
+                "known causal pathway templates (e.g. maintainer departure cascade, "
+                "release drought). Returns evidence for/against each pathway with "
+                "confidence scores and alternative explanations. Evidence is at "
+                "Tier 2 (pattern matching). Does NOT return conclusions."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "owner": {
+                        "type": "string",
+                        "description": "GitHub org or user",
+                    },
+                    "repo": {
+                        "type": "string",
+                        "description": "Repository name",
+                    },
+                },
+                "required": ["owner", "repo"],
+            },
+        },
+    },
+]
 
-Two function schemas (Groq function-calling format). Each needs:
-
-- `name` — must match your Python function name
-- `description` — what it returns **and** what it does **not** return
-- `parameters` — `owner` and `repo` (both required strings)
-
-**ADLC tip:** Tool descriptions are guardrails. "Does NOT return opinions" keeps the data-intelligence boundary intact.
-
-#### 3. Map names to functions
-
-```python
+# Map tool names to Python functions
 TOOL_FUNCTIONS = {
     "get_repo_health": get_repo_health,
     "analyze_causal_patterns": analyze_causal_patterns,
 }
+
+# System prompt — your agent's rules (write your own!)
+# Think about what you learned in Parts 1 and 2:
+#   - When should the agent call each tool?
+#   - How should it present numbers from the data layer?
+#   - How should it handle causal claims and uncertainty?
+#   - What should it never do?
+SYSTEM_PROMPT = """\
+TODO: Write your system prompt here. Describe the agent's role and rules.
+"""
+
+
+# Agent loop — LLM decides which tools to call, Python runs them, LLM synthesizes
+def run_agent(user_message: str) -> str:
+    """Run the full agent loop: user -> LLM -> tools -> LLM -> response."""
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_message},
+    ]
+
+    while True:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            tools=TOOLS,
+            tool_choice="auto",
+        )
+        msg = response.choices[0].message
+
+        if msg.tool_calls:
+            messages.append(msg)
+            for tool_call in msg.tool_calls:
+                fn_name = tool_call.function.name
+                fn_args = json.loads(tool_call.function.arguments)
+                print(f"  [Calling {fn_name}({fn_args})]")
+
+                result = TOOL_FUNCTIONS[fn_name](**fn_args)
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": json.dumps(result, default=str),
+                })
+        else:
+            return msg.content
+
+
+# Naive agent — no tools, no rules, for comparison
+def run_naive_agent(user_message: str) -> str:
+    """A naive agent with no tools and no reasoning rules — for comparison."""
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_message},
+        ],
+    )
+    return response.choices[0].message.content
+
+
+if __name__ == "__main__":
+    query = " ".join(sys.argv[1:]) or "Analyze the health of the pallets/flask repository."
+
+    print("=" * 60)
+    print("CAUSAL AGENT")
+    print("=" * 60)
+    print(run_agent(query))
+
+    print("\n" + "=" * 60)
+    print("NAIVE AGENT (no tools, no rules)")
+    print("=" * 60)
+    print(run_naive_agent(query))
 ```
 
-#### 4. Write `SYSTEM_PROMPT` — your agent's rules
+### Option B: What that code does (in plain English)
 
-Include these rules (in your own words):
+Create a new file: in Cursor's file explorer, right-click the `src/` folder, choose **New File**, and name it `agent.py`. Then highlight the description below, press `Cmd+L` / `Ctrl+L`, and ask Cursor to build the file.
 
-1. Always call `get_repo_health` first
-2. If flags are concerning, call `analyze_causal_patterns`
-3. Never quote a number without its benchmark context
-4. State evidence tier for every causal claim
-5. Acknowledge at least one alternative explanation
-6. Use hedged language for Tier 1–2 ("Based on observed patterns…")
-7. Write a narrative briefing, not a bullet dump
+**Imports and setup.** Import `json`, `os`, `sys`, `dotenv`, `Groq`, and the two tool functions from `tools.py` (`get_repo_health` and `analyze_causal_patterns`). Load the `.env` file and create a Groq client using the `GROQ_API_KEY` environment variable.
 
-#### 5. Implement `run_agent(user_message)`
+**Tool schemas (`TOOLS`).** Define two function schemas in Groq's function-calling format. Each has a `name` (matching the Python function), a `description` that says what the tool returns *and* what it does not return, and `parameters` for `owner` and `repo` (both required strings). The descriptions are guardrails — saying "Does NOT return opinions" keeps the data-intelligence boundary intact.
 
-```
-loop:
-    send messages to Groq with tools=TOOLS
-    if model requests tool calls:
-        run each Python function
-        append results to messages
-        continue loop
-    else:
-        return the text response
-```
+**Tool function map (`TOOL_FUNCTIONS`).** A dictionary mapping tool name strings to the actual Python functions.
 
-Use model: `llama-3.3-70b-versatile`
+**System prompt (`SYSTEM_PROMPT`).** This is the part where you decide how the agent should behave. Think about what you learned in Parts 1 and 2: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
 
-Print each tool call so you can see what happened:
+**Agent loop (`run_agent`).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use model `llama-3.3-70b-versatile`. Print each tool call so you can see what happened.
 
-```python
-print(f"  [Calling {fn_name}({fn_args})]")
-```
+**Naive agent (`run_naive_agent`).** Same model, but with a generic system prompt ("You are a helpful assistant") and no tools. This exists for comparison — to show the difference between an agent with structured data and one without.
 
-#### 6. Implement `run_naive_agent(user_message)`
-
-Same model. System prompt: `"You are a helpful assistant."` No tools.
-
-#### 7. Add `if __name__ == "__main__"`
-
-Run both agents on the same query. Default: `"Analyze the health of the pallets/flask repository."`
+**Main block.** When run from the command line, take an optional query argument (default: "Analyze the health of the pallets/flask repository"), run both agents on the same query, and print their outputs side by side.
 
 ### Checkpoint ✓
 
 ```bash
-uv run --directory src python agent.py
+uv run src/agent.py
 ```
 
 **Success:**
@@ -424,8 +745,8 @@ uv run --directory src python agent.py
 ### Try other repos
 
 ```bash
-uv run --directory src python agent.py "Analyze the health of facebook/react"
-uv run --directory src python agent.py "Should I contribute to psf/requests?"
+uv run src/agent.py "Analyze the health of facebook/react"
+uv run src/agent.py "Should I contribute to psf/requests?"
 ```
 
 ### ADLC evaluation note
@@ -456,7 +777,7 @@ New-Item -ItemType Directory -Force -Path .cursor/skills/repo-health-analyst/scr
 
 #### 1. Create `SKILL.md`
 
-YAML frontmatter at the top:
+Start the file with YAML frontmatter — a block of metadata between `---` lines at the very top. Cursor reads this to know when to activate the skill and what it needs to run:
 
 ```yaml
 ---
@@ -467,6 +788,10 @@ description: >
 compatibility: Requires Python 3.11+, uv, GITHUB_TOKEN, GROQ_API_KEY.
 ---
 ```
+
+- **`name`** identifies the skill in Cursor's skill list.
+- **`description`** tells Cursor when to suggest this skill — it matches against what you type in chat. If you ask "evaluate the health of this repo," Cursor sees the keywords and knows this skill is relevant.
+- **`compatibility`** lists what must be installed for the skill to work.
 
 Then write instructions for:
 
@@ -551,7 +876,7 @@ Version your skill (`metadata.version` in frontmatter). When you change threshol
 ### Run the comparison one more time
 
 ```bash
-uv run --directory src python agent.py
+uv run src/agent.py
 ```
 
 | | Causal agent | Naive agent |
@@ -603,9 +928,9 @@ causal-agent-workshop/
 ### Commands
 
 ```bash
-uv run --directory src python verify.py
-uv run --directory src python agent.py
-uv run --directory src python agent.py "Analyze the health of facebook/react"
+uv run src/verify.py
+uv run src/agent.py
+uv run src/agent.py "Analyze the health of facebook/react"
 ```
 
 ### The five rules

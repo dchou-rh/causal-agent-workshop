@@ -186,16 +186,11 @@ In Cursor, open the integrated terminal (**View → Terminal**, or `` Ctrl+` `` 
 **Clone** means "download a copy of the project from the internet." Run these commands one at a time:
 
 ```bash
-git clone <your-repo-url> causal-agent-workshop
-```
-
-Replace `<your-repo-url>` with the actual repository URL (it looks like `https://github.com/org/causal-agent-workshop.git`).
-
-Then move into the project folder:
-
-```bash
+git clone https://github.com/dchou-rh/causal-agent-workshop.git
 cd causal-agent-workshop
 ```
+
+Replace the URL above if your fork or organization uses a different path.
 
 Finally, install the project's Python packages:
 

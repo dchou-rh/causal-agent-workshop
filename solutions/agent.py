@@ -5,11 +5,13 @@ import sys
 from dotenv import load_dotenv
 from groq import Groq
 
+from config import get_groq_model
 from tools import analyze_causal_patterns, get_repo_health
 
 load_dotenv()
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
+MODEL = get_groq_model()
 
 TOOLS = [
     {
@@ -107,7 +109,7 @@ def run_agent(user_message: str) -> str:
 
     while True:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model=MODEL,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
@@ -135,7 +137,7 @@ def run_agent(user_message: str) -> str:
 def run_naive_agent(user_message: str) -> str:
     """A naive agent with no tools and no reasoning rules — for comparison."""
     response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
+        model=MODEL,
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": user_message},

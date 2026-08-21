@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from github import Github
 from groq import Groq
 
+from config import get_groq_model
+
 load_dotenv()
 
 # Test GitHub
@@ -13,8 +15,10 @@ print(f"GitHub OK: {repo.full_name} ({repo.stargazers_count} stars)")
 
 # Test Groq
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
+model = get_groq_model()
 resp = client.chat.completions.create(
-    model="openai/gpt-oss-20b",
+    model=model,
     messages=[{"role": "user", "content": "Say 'ready' and nothing else."}],
 )
+print(f"Groq model: {model}")
 print(f"Groq OK: {resp.choices[0].message.content}")

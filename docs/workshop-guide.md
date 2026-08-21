@@ -570,11 +570,13 @@ import sys
 from dotenv import load_dotenv
 from groq import Groq
 
+from config import get_groq_model
 from tools import get_repo_health, analyze_causal_patterns
 
 load_dotenv()
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
+MODEL = get_groq_model()
 
 # Tool schemas — the LLM's menu of available functions
 TOOLS = [
@@ -660,7 +662,7 @@ def run_agent(user_message: str) -> str:
 
     while True:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model=MODEL,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
@@ -689,7 +691,7 @@ def run_agent(user_message: str) -> str:
 def run_naive_agent(user_message: str) -> str:
     """A naive agent with no tools and no reasoning rules — for comparison."""
     response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
+        model=MODEL,
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": user_message},
@@ -716,7 +718,7 @@ if __name__ == "__main__":
 
 Create a new file: in Cursor's file explorer, right-click the `src/` folder, choose **New File**, and name it `agent.py`. Then highlight the description below, press `Cmd+L` / `Ctrl+L`, and ask Cursor to build the file.
 
-**Imports and setup.** Import `json`, `os`, `sys`, `dotenv`, `Groq`, and the two tool functions from `tools.py` (`get_repo_health` and `analyze_causal_patterns`). Load the `.env` file and create a Groq client using the `GROQ_API_KEY` environment variable.
+**Imports and setup.** Import `json`, `os`, `sys`, `dotenv`, `Groq`, `get_groq_model` from `config.py`, and the two tool functions from `tools.py`. Load `.env`, create the Groq client, and set `MODEL = get_groq_model()`. The default model is `openai/gpt-oss-20b`; set `GROQ_MODEL=qwen/qwen3.6-27b` in `.env` to use Qwen instead.
 
 **Tool schemas (`TOOLS`).** Define two function schemas in Groq's function-calling format. Each has a `name` (matching the Python function), a `description` that says what the tool returns *and* what it does not return, and `parameters` for `owner` and `repo` (both required strings). The descriptions are guardrails — saying "Does NOT return opinions" keeps the data-intelligence boundary intact.
 
@@ -724,7 +726,7 @@ Create a new file: in Cursor's file explorer, right-click the `src/` folder, cho
 
 **System prompt (`SYSTEM_PROMPT`).** This is the part where you decide how the agent should behave. Think about what you learned in Parts 1 and 2: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
 
-**Agent loop (`run_agent`).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use model `openai/gpt-oss-20b`. Print each tool call so you can see what happened.
+**Agent loop (`run_agent`).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use `model=MODEL`. Print each tool call so you can see what happened.
 
 **Naive agent (`run_naive_agent`).** Same model, but with a generic system prompt ("You are a helpful assistant") and no tools. This exists for comparison — to show the difference between an agent with structured data and one without.
 
@@ -917,6 +919,7 @@ causal-agent-workshop/
 ├── README.md
 ├── docs/workshop-guide.md
 ├── src/
+│   ├── config.py
 │   ├── verify.py
 │   ├── tools.py
 │   └── agent.py

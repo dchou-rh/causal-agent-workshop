@@ -265,20 +265,46 @@ This gives you 5,000 API requests/hour. The workshop uses ~200.
 
 ### Step 7: Get a Groq API Key (Free, No Credit Card)
 
-1. Go to [console.groq.com](https://console.groq.com)
-2. Sign up with email or Google — **no credit card required**
+1. Go to [console.groq.com](https://console.groq.com) and log in
+2. Sign up with email or Google if needed — **no credit card required**
 3. Go to **API Keys** at the top right
 4. Click **Create API Key**, name it `workshop`, and copy it
 5. Switch back to Cursor, open `.env`, and replace `gsk_your_key_here` with the key you just copied
 6. Save the file (`Cmd+S` / `Ctrl+S`)
 
+#### Enable the workshop models in the Groq Console
+
+Groq does not enable every model for every account by default. Before running the workshop code, log into [console.groq.com](https://console.groq.com) and allow the models this project uses:
+
+1. Open **Settings** (gear icon or your organization menu)
+2. Go to **Organization → Limits** ([direct link](https://console.groq.com/settings/limits))
+3. Under model permissions, choose **Only Allow** (or adjust blocks so these models are permitted)
+4. Enable both workshop models:
+   - `openai/gpt-oss-20b` (default)
+   - `qwen/qwen3.6-27b` (optional alternative)
+5. Click **Save**
+
+If your account uses a Groq **project**, also check **Settings → Projects → Limits** for the selected project. Project rules cannot allow models blocked at the organization level. See [Groq model permissions](https://console.groq.com/docs/model-permissions) for details.
+
 Groq gives you 14,400 requests/day on the free tier. The workshop uses about 30 to 200.
+
+**Supported models** (set `GROQ_MODEL` in `.env` after enabling them in the console):
+
+| Model | Notes |
+|-------|--------|
+| `openai/gpt-oss-20b` | Default — fast, good tool calling |
+| `qwen/qwen3.6-27b` | Alternative — uncomment in `.env` to switch |
+
+Run `uv run src/list_models.py` to see which models your API key can access after console setup.
 
 Your `.env` file should now look like this (with your real tokens):
 
 ```
 GITHUB_TOKEN=ghp_abc123...
 GROQ_API_KEY=gsk_xyz789...
+
+# Optional — default is openai/gpt-oss-20b
+# GROQ_MODEL=qwen/qwen3.6-27b
 ```
 
 > **Alternative (advanced):** If you prefer shell environment variables over a `.env` file, you can export them directly:
@@ -323,7 +349,7 @@ If either line fails:
 - Open `.env` in Cursor and check that both tokens are present, with no extra spaces or quotes around the values
 - Make sure the file is named exactly `.env` (not `.env.sample`, not `env.txt`)
 - If you used shell exports instead of `.env`, verify they are set: `echo $GITHUB_TOKEN` (macOS/Linux) or `echo $env:GITHUB_TOKEN` (Windows PowerShell)
-- If you get an error about a model not existing or not having access, run `uv run src/list_models.py` to see which models are available on your Groq account
+- If you get an error about a model not existing or not having access, log into [console.groq.com](https://console.groq.com) and enable the model under **Settings → Organization → Limits** (see Step 7), then run `uv run src/list_models.py` to confirm it appears
 
 ---
 
@@ -364,10 +390,12 @@ causal-agent-workshop/
 │   │       └── SKILL.md
 │   ├── README.md
 │   ├── agent.py
+│   ├── config.py
 │   ├── tools.py
 │   └── verify.py
 ├── src/
 │   ├── agent.py                       # ← you create in Part 3
+│   ├── config.py                      # Groq model selection (GROQ_MODEL)
 │   ├── list_models.py                 # Lists available Groq models
 │   ├── tools.py                       # Parts 1 + 2 (you implement these)
 │   └── verify.py                      # Setup verification

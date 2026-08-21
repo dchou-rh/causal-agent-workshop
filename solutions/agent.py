@@ -107,7 +107,7 @@ def run_agent(user_message: str) -> str:
 
     while True:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
@@ -135,7 +135,7 @@ def run_agent(user_message: str) -> str:
 def run_naive_agent(user_message: str) -> str:
     """A naive agent with no tools and no reasoning rules — for comparison."""
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-20b",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": user_message},

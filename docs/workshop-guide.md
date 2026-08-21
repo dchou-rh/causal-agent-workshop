@@ -660,7 +660,7 @@ def run_agent(user_message: str) -> str:
 
     while True:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
@@ -689,7 +689,7 @@ def run_agent(user_message: str) -> str:
 def run_naive_agent(user_message: str) -> str:
     """A naive agent with no tools and no reasoning rules — for comparison."""
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-20b",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": user_message},
@@ -724,7 +724,7 @@ Create a new file: in Cursor's file explorer, right-click the `src/` folder, cho
 
 **System prompt (`SYSTEM_PROMPT`).** This is the part where you decide how the agent should behave. Think about what you learned in Parts 1 and 2: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
 
-**Agent loop (`run_agent`).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use model `llama-3.3-70b-versatile`. Print each tool call so you can see what happened.
+**Agent loop (`run_agent`).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use model `openai/gpt-oss-20b`. Print each tool call so you can see what happened.
 
 **Naive agent (`run_naive_agent`).** Same model, but with a generic system prompt ("You are a helpful assistant") and no tools. This exists for comparison — to show the difference between an agent with structured data and one without.
 

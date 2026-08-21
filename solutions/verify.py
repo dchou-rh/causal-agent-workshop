@@ -14,7 +14,7 @@ print(f"GitHub OK: {repo.full_name} ({repo.stargazers_count} stars)")
 # Test Groq
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 resp = client.chat.completions.create(
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-20b",
     messages=[{"role": "user", "content": "Say 'ready' and nothing else."}],
 )
 print(f"Groq OK: {resp.choices[0].message.content}")

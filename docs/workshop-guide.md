@@ -8,6 +8,55 @@ A 90-minute hands-on workshop on building agents that reason about data — not 
 
 ---
 
+## Why causal reasoning?
+
+Most agent demos stop at retrieval: pull a metric, summarize it, call it intelligence. In practice, that leaves users with the same question they started with — *so what?*
+
+Effective decision-support agents are built around a simple idea: users need three things — not one:
+
+| Question | What users actually need |
+|----------|--------------------------|
+| **What happened?** | Accurate data |
+| **Why did it happen?** | Causal context — plausible mechanisms, not just correlated trends |
+| **What happens next?** | Grounded judgment a human can act on |
+
+That framing — *not what happened, but why it happened and what happens next* — is why this workshop goes beyond wiring an LLM to an API.
+
+### How this differs from traditional machine learning
+
+Traditional ML is built to **predict** — given inputs, produce a score or label trained on historical examples. That works well when you have lots of labeled data, a stable problem, and users who only need the prediction itself.
+
+| | Traditional ML | This workshop's approach |
+|---|---|---|
+| **Primary output** | A score or class ("73% churn risk") | Structured facts + narrative reasoning |
+| **Training** | Collect data, engineer features, train, validate, deploy | No model training — you write tools and prompts |
+| **"Why?"** | Often opaque; explainability is a separate project | Designed in: baselines, pathways, evidence tiers, alternatives |
+| **Causation** | Usually learns correlation; true causality needs extra methods and data | Explicit causal templates + honest confidence labels |
+| **Adaptability** | New questions often mean new features or retraining | Same tools; the LLM adapts answers to the user's question |
+| **Best at** | High-volume pattern matching at scale | Interactive analysis where context and explanation matter |
+
+Neither replaces the other. Production systems often use **both**: ML for scoring at scale, agents for interpretation, investigation, and communication. The mistake is treating an LLM chatbot as a substitute for either — it has no trained model of your domain and no structured evidence unless you build that layer.
+
+This workshop focuses on that missing layer: **tools that return auditable facts**, plus **reasoning rules** that force the agent to contextualize metrics, separate correlation from mechanism, and admit uncertainty.
+
+### What we learned building intelligence agents (not chatbots)
+
+These patterns show up whenever an agent has to support real decisions. They are not domain-specific tricks; they are design choices:
+
+1. **Metrics without baselines are noise.** A number only becomes a signal when it is compared to something — history, peers, or expected range. Agents that quote raw counts feel confident and mislead.
+
+2. **Correlation is not an explanation.** Two trends moving together does not mean one caused the other. Useful agents separate *what we observe* from *why we think it happened* — and label how strong that evidence is.
+
+3. **Facts and judgment must stay separate.** Structured data functions should return indicator flags and reference context, not recommendations. The LLM interprets for the user's situation; if opinions are baked into the data layer, the same tool breaks for every role.
+
+4. **Overconfidence is worse than uncertainty.** Strong agents acknowledge alternative explanations and state evidence tier — especially when reasoning from patterns rather than controlled experiments.
+
+5. **The data-intelligence boundary scales.** One well-designed tool layer can serve many prompts, personas, and workflows. The intelligence layer adapts; the data layer stays auditable.
+
+This workshop uses **open-source project health on GitHub** instead of customer or business data, so you can build and test the same ideas with free public APIs. The architecture is the lesson: contextualized metrics, causal pathways, honest confidence, and guardrails — packaged so you can reuse them in any domain.
+
+---
+
 ## Who this is for
 
 No prior Python or terminal experience is required. The [README](../README.md) covers everything you need to get started, including how to use the terminal and run commands.

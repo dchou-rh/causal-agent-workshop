@@ -202,7 +202,7 @@ cd causal-agent-workshop
 
 Replace the URL above if your fork or organization uses a different path.
 
-Finally, install the project's Python packages:
+Finally, install the project's Python packages. If `uv` is not recognized, close and reopen Cursor so the terminal picks up the newly installed command.
 
 ```bash
 uv sync
@@ -272,7 +272,7 @@ This gives you 5,000 API requests/hour. The workshop uses ~200.
 5. Switch back to Cursor, open `.env`, and replace `gsk_your_key_here` with the key you just copied
 6. Save the file (`Cmd+S` / `Ctrl+S`)
 
-Groq gives you 14,400 requests/day on the free tier. The workshop uses ~30.
+Groq gives you 14,400 requests/day on the free tier. The workshop uses about 30 to 200.
 
 Your `.env` file should now look like this (with your real tokens):
 
@@ -323,6 +323,7 @@ If either line fails:
 - Open `.env` in Cursor and check that both tokens are present, with no extra spaces or quotes around the values
 - Make sure the file is named exactly `.env` (not `.env.sample`, not `env.txt`)
 - If you used shell exports instead of `.env`, verify they are set: `echo $GITHUB_TOKEN` (macOS/Linux) or `echo $env:GITHUB_TOKEN` (Windows PowerShell)
+- If you get an error about a model not existing or not having access, run `uv run src/list_models.py` to see which models are available on your Groq account
 
 ---
 
@@ -367,6 +368,7 @@ causal-agent-workshop/
 │   └── verify.py
 ├── src/
 │   ├── agent.py                       # ← you create in Part 3
+│   ├── list_models.py                 # Lists available Groq models
 │   ├── tools.py                       # Parts 1 + 2 (you implement these)
 │   └── verify.py                      # Setup verification
 ├── .cursor/skills/                    # ← you create in Part 4

@@ -41,6 +41,16 @@ A small agent that:
 
 **Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built.
 
+### Quick reference
+
+| Part | File | What you build |
+|------|------|----------------|
+| Setup | `src/verify.py` | Confirm GitHub + Groq access |
+| Part 1 | `src/tools.py` | `get_repo_health` with contextual benchmarks |
+| Part 2 | `src/tools.py` | `analyze_causal_patterns` causal reasoning layer |
+| Part 3 | `src/agent.py` | Full Groq agent with function calling |
+| Part 4 | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill |
+
 ---
 
 ## ADLC: How this workshop is structured
@@ -912,28 +922,64 @@ This workshop gives you the foundation. ADLC is the discipline for everything af
 
 ## Reference card
 
-### Project structure (when complete)
+### Project structure
+
+After setup, the repo looks like this. Files you create during the workshop are marked with **← you create**.
 
 ```
 causal-agent-workshop/
-├── README.md
-├── docs/workshop-guide.md
-├── src/
+├── .venv/                             # ← created by uv sync (virtual environment)
+├── docs/
+│   └── workshop-guide.md              # This guide (ADLC-aligned)
+├── solutions/                         # Instructor reference (optional)
+│   ├── skills/
+│   │   └── repo-health-analyst/
+│   │       ├── scripts/
+│   │       │   └── tools.py
+│   │       └── SKILL.md
+│   ├── README.md
+│   ├── agent.py
 │   ├── config.py
-│   ├── verify.py
 │   ├── tools.py
-│   └── agent.py
-└── .cursor/skills/repo-health-analyst/
-    ├── SKILL.md
-    └── scripts/tools.py
+│   └── verify.py
+├── src/
+│   ├── agent.py                       # ← you create in Part 3
+│   ├── config.py                      # Groq model selection (GROQ_MODEL)
+│   ├── list_models.py                 # Lists available Groq models
+│   ├── tools.py                       # Parts 1 + 2 (you implement these)
+│   └── verify.py                      # Setup verification
+├── .cursor/skills/                    # ← you create in Part 4
+│   └── repo-health-analyst/
+│       ├── scripts/
+│       │   └── tools.py
+│       └── SKILL.md
+├── .env                               # ← you create in setup (from .env.sample)
+├── .env.sample                        # Template for API keys
+├── .gitignore
+├── .python-version
+├── README.md                          # Setup instructions
+├── pyproject.toml
+└── uv.lock
 ```
 
 ### Commands
 
+Open the terminal in Cursor from the **project root**, then run these **one at a time**:
+
 ```bash
+# Verify setup
 uv run src/verify.py
+
+# After completing Parts 1–2 — test health metrics
+uv run --directory src python -c "from tools import get_repo_health; import json; print(json.dumps(get_repo_health('pallets','flask'), indent=2, default=str))"
+
+# After completing Part 3 — run the causal agent
 uv run src/agent.py
 uv run src/agent.py "Analyze the health of facebook/react"
+
+# After completing Part 4 — run skill scripts
+uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
+uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
 ```
 
 ### The five rules

@@ -182,12 +182,12 @@ Here is what we are building. In a real project, you would figure these out your
 
 ---
 
-### How Parts 1 and 2 work
+### How Parts 1–3 work
 
 Each part gives you two ways to implement the code:
 
 - **Option A: Copy the code** — A complete, working code block you paste into `src/tools.py`. This gets you running immediately so you can focus on understanding.
-- **Option B: Let Cursor write it** — A plain-English description of the same logic. Highlight it along with the skeleton function in `src/tools.py`, send both to Cursor (`Cmd+L` / `Ctrl+L`), and ask it to implement the function. Compare what Cursor generates to the working code in Option A.
+- **Option B: Let Cursor write it** — Copy the ready-made prompt for that part into Cursor chat (`Cmd+L` / `Ctrl+L`). Cursor will edit the file for you. Compare what it generates to the working code in Option A.
 
 You can do both — paste the code first, then read the description and try Option B to see how Cursor's version compares. This is how you learn to evaluate AI-generated code against a known-good reference.
 
@@ -209,7 +209,7 @@ You can do both — paste the code first, then read the description and try Opti
 Pick one:
 
 1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`. This gets you running immediately so you can focus on understanding the logic.
-2. **Option B: Let Cursor write it** — Skip to ["What that code does"](#what-that-code-does-in-plain-english), highlight the plain-English description along with the skeleton function in `src/tools.py`, send both to Cursor (`Cmd+L` / `Ctrl+L`), and ask it to implement the function. Compare what it generates to the working code in Option A.
+2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it) and copy the prompt into Cursor chat.
 
 ### Option A: The code
 
@@ -307,9 +307,43 @@ def _classify_trend(weekly: list[int]) -> str:
 
 > **Note:** The first time you call the GitHub stats API for a given repo, it may return empty data while GitHub computes the results. If that happens when you test, wait 5 seconds and try again.
 
-### Option B: What that code does (in plain English)
+### Option B: Let Cursor write it
 
-If you chose Option A, read through this to understand what you pasted. If you chose Option B, highlight the text below along with the skeleton function in `src/tools.py`, press `Cmd+L` (macOS) or `Ctrl+L` (Windows), and ask Cursor to implement it. The skeleton already has the function name, arguments, and docstring — Cursor just needs the logic.
+1. Open `src/tools.py` in Cursor (the skeleton with `NotImplementedError` stubs is already there).
+2. Press `Cmd+L` (macOS) or `Ctrl+L` (Windows) to open chat.
+3. Copy the entire prompt below and paste it into chat. Press Enter.
+4. Review the changes before accepting — make sure it only edits `get_repo_health` and `_classify_trend`.
+
+**Cursor prompt (copy and paste):**
+
+```
+Implement get_repo_health and _classify_trend in src/tools.py for this workshop project.
+
+The file already has imports, load_dotenv(), and gh = Github(os.environ["GITHUB_TOKEN"]). Replace the NotImplementedError stubs only — do not rewrite the whole file.
+
+get_repo_health(owner, repo) must return structured facts only (no opinions, recommendations, or severity labels):
+
+1. Fetch the repo and record the current UTC time.
+2. Get weekly commit counts from GitHub commit activity stats (up to 52 weeks).
+3. Compute recent_avg (mean of last 4 weeks), hist_mean, hist_stdev (use 1.0 if fewer than 2 weeks), and z_score = (recent_avg - hist_mean) / hist_stdev.
+4. From contributor stats, compute top_contributor_share (bus factor).
+5. From issues in the last 90 days (exclude pull requests), count open vs closed and compute close_ratio.
+6. Return a dict with: repository, stars, forks, metrics (commit_activity, contributor_concentration, issue_health), indicator_flags, and retrieved_at (ISO timestamp).
+
+Indicator flags (booleans only):
+- is_active: recent weekly average > 0
+- is_declining: z-score < -1.0
+- has_bus_factor_risk: top contributor share > 0.50
+- has_issue_backlog: more open than closed issues
+
+_classify_trend(weekly) must return one of: insufficient_data (< 8 weeks), accelerating (second-half/first-half > 1.2), stable (> 0.9), slowing (> 0.6), otherwise declining.
+
+Match the existing code style. Do not add new dependencies.
+```
+
+### What that code does (in plain English)
+
+If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
 
 The function should retrieve health metrics for a GitHub repository and return structured data with indicator flags. It should not return opinions, recommendations, or severity labels.
 
@@ -382,7 +416,7 @@ This workshop operates at **pattern matching** (Tier 2) — not proof.
 Same choice as Part 1:
 
 1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`.
-2. **Option B: Let Cursor write it** — Skip to ["What that code does"](#option-b-what-that-code-does-in-plain-english-1), highlight the description along with the skeleton stubs in `src/tools.py`, and let Cursor implement them.
+2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-1) and copy the prompt into Cursor chat.
 
 ### Option A: The code
 
@@ -542,9 +576,47 @@ def _get_alternative(pathway_id: str) -> str:
     return alternatives.get(pathway_id, "No alternative identified.")
 ```
 
-### Option B: What that code does (in plain English)
+### Option B: Let Cursor write it
 
-If you chose Option A, read through this to understand what you pasted. If you chose Option B, highlight the text below along with the skeleton stubs in `src/tools.py`, press `Cmd+L` / `Ctrl+L`, and ask Cursor to implement them.
+1. Open `src/tools.py` in Cursor (your Part 1 functions should already be in place).
+2. Press `Cmd+L` (macOS) or `Ctrl+L` (Windows) to open chat.
+3. Copy the entire prompt below and paste it into chat. Press Enter.
+4. Review the changes before accepting — make sure it adds `CAUSAL_PATHWAYS` and implements `analyze_causal_patterns` and `_get_alternative`.
+
+**Cursor prompt (copy and paste):**
+
+```
+Implement Part 2 in src/tools.py: CAUSAL_PATHWAYS, analyze_causal_patterns, and _get_alternative.
+
+Replace the NotImplementedError stubs. Add CAUSAL_PATHWAYS after _classify_trend with exactly two pathways:
+
+1. pathway_001 — Maintainer Departure Cascade
+   - mechanism: core maintainer stops contributing → review slowdown → contributor decline
+   - evidence_tier: 2, confidence_base: 0.55
+   - nodes to check: maintainer_inactive, contributor_decline
+
+2. pathway_002 — Release Drought
+   - mechanism: 90+ days without release → adoption stall → fork surge
+   - evidence_tier: 2, confidence_base: 0.45
+   - nodes to check: no_recent_release
+
+analyze_causal_patterns(owner, repo) must:
+- For pathway 001: check top contributor's last active week; compare unique contributors in the recent 13 weeks vs the prior 13 weeks
+- For pathway 002: check days since the latest release (or flag if no releases)
+- For each pathway, return: pathway name, mechanism, observations (per node with detected + detail), nodes_detected, nodes_checked, match_strength, evidence_tier, adjusted_confidence (confidence_base × match_strength), alternative_explanation
+- Return a top-level dict with repository, pathways_checked, results, retrieved_at, and methodology noting Tier 2 pattern matching
+- Return evidence only — do NOT pick which pathway "matters most"
+
+_get_alternative(pathway_id) must return a competing explanation:
+- pathway_001: seasonal slowdown (holidays, summer)
+- pathway_002: intentional stability in a mature project
+
+Use the existing gh client. Match the existing code style. Do not add new dependencies.
+```
+
+### What that code does (in plain English)
+
+If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
 
 **`CAUSAL_PATHWAYS`** is a list of known cause-effect chains in open-source projects. Each pathway has:
 
@@ -615,7 +687,7 @@ Plus a **naive agent** with no tools — for comparison. This is your evaluation
 Same choice as Parts 1 and 2:
 
 1. **Option A: Copy the code** — Paste the full working file below.
-2. **Option B: Let Cursor write it** — Skip to ["What that code does"](#option-b-what-that-code-does-in-plain-english-2), create an empty file, and let Cursor build it from the description.
+2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-2) and copy the prompt into Cursor chat.
 
 ### Option A: The code
 
@@ -773,9 +845,61 @@ if __name__ == "__main__":
     print(run_naive_agent(query))
 ```
 
-### Option B: What that code does (in plain English)
+### Option B: Let Cursor write it
 
-Create a new file: in Cursor's file explorer, right-click the `src/` folder, choose **New File**, and name it `agent.py`. Then highlight the description below, press `Cmd+L` / `Ctrl+L`, and ask Cursor to build the file.
+1. In Cursor's file explorer, right-click the `src/` folder → **New File** → name it `agent.py` (the file can be empty).
+2. Press `Cmd+L` (macOS) or `Ctrl+L` (Windows) to open chat.
+3. Copy the entire prompt below and paste it into chat. Press Enter.
+4. Review the generated file before accepting. Run the checkpoint command when done.
+
+**Cursor prompt (copy and paste):**
+
+```
+Create src/agent.py — a Groq function-calling agent for GitHub repository health analysis.
+
+Imports and setup:
+- import json, os, sys
+- from dotenv import load_dotenv
+- from groq import Groq
+- from config import get_groq_model
+- from tools import get_repo_health, analyze_causal_patterns
+- load_dotenv()
+- client = Groq(api_key=os.environ["GROQ_API_KEY"])
+- MODEL = get_groq_model()  # do not hardcode a model name
+
+Define TOOLS with two Groq function schemas: get_repo_health and analyze_causal_patterns.
+Each needs owner and repo (required strings). Descriptions must explain what the tool returns AND state it does NOT return opinions or recommendations.
+
+Define TOOL_FUNCTIONS mapping tool names to the Python functions.
+
+Define SYSTEM_PROMPT with these rules:
+1. Always call get_repo_health first — never guess metrics
+2. If any indicator flag is concerning, call analyze_causal_patterns
+3. Never present a number without reference context (z-scores, historical averages)
+4. State evidence tier (1-4) for every causal claim
+5. Acknowledge at least one alternative explanation
+6. For Tier 1-2 evidence, say "Based on observed patterns..." not "Data proves..."
+7. Structure the response as a narrative briefing, not a bullet dump
+
+Implement run_agent(user_message):
+- Agent loop: send messages to Groq with tools=TOOLS and model=MODEL
+- If tool_calls returned, execute each function, append results, and loop
+- Print each tool call like: [Calling get_repo_health({'owner': 'pallets', 'repo': 'flask'})]
+- Return final text response when no more tool calls
+
+Implement run_naive_agent(user_message):
+- Same model, system prompt "You are a helpful assistant.", no tools
+
+if __name__ == "__main__":
+- Query from sys.argv or default to "Analyze the health of the pallets/flask repository."
+- Print causal agent output, then naive agent output, with clear section headers
+
+Match patterns used elsewhere in this project. Do not add new dependencies.
+```
+
+### What that code does (in plain English)
+
+If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
 
 **Imports and setup.** Import `json`, `os`, `sys`, `dotenv`, `Groq`, `get_groq_model` from `config.py`, and the two tool functions from `tools.py`. Load `.env`, create the Groq client, and set `MODEL = get_groq_model()`. The default model is `openai/gpt-oss-20b`; set `GROQ_MODEL=qwen/qwen3.6-27b` in `.env` to use Qwen instead.
 

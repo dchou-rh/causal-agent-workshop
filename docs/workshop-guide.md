@@ -188,7 +188,7 @@ Here is what we are building. In a real project, you would figure these out your
 
 ### Live workshop tip (Cursor free tier)
 
-This workshop does **not** require Cursor AI to complete. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. If you want to try Option B, **pair up**: one partner implements Option A while the other uses Cursor chat, or swap roles between parts. Save Cursor for optional debugging — highlight an error and ask one focused question.
+This workshop does **not** require Cursor AI for Parts 1–3. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. **Part 4** includes an optional in-chat skill demo (step 5) — reserve one Agent request for that, or skip it and verify your skill with the terminal commands in step 4. If you want to try Option B in Parts 1–3, **pair up**: one partner implements Option A while the other uses Cursor chat, or swap roles between parts.
 
 ### How Parts 1–3 work
 
@@ -1105,13 +1105,15 @@ uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
 ```
 
-#### 5. Test in Cursor
+#### 5. Test in Cursor (uses one Agent request)
 
-Open chat (**Cmd+L** / **Ctrl+L**) and ask:
+This step is how you confirm the skill works *inside* Cursor — chat is what activates it. Open chat (**Cmd+L** / **Ctrl+L**) and ask:
 
 > Analyze the health of pallets/flask
 
 Cursor should load your skill, run your scripts, and follow your rules.
+
+**No chat quota left?** You already validated the skill in step 4 via the terminal. You can skip this step and still count Part 4 complete — you just will not see Cursor route through `SKILL.md` automatically.
 
 ### What you packaged
 

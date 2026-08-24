@@ -401,15 +401,40 @@ You just defined the **contract** for your data layer. Every consumer of `get_re
 
 Part 1 tells you *what* is happening. Causal reasoning asks *why* — and requires honesty about how strong the evidence is.
 
-### Pearl's ladder (simplified)
+### Pearl's ladder — three kinds of causal questions
 
-| Level | Question | Example |
-|-------|----------|---------|
-| Association | What is? | "Commits declined" |
-| Intervention | What if we act? | "What if we added a maintainer?" |
-| Counterfactual | Why did it happen? | "Did maintainer burnout cause the decline?" |
+Computer scientist **Judea Pearl** argued in [*The Book of Why*](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/) that "why" is not one question. His **ladder of causation** separates three levels of reasoning:
 
-This workshop operates at **pattern matching** (Tier 2) — not proof.
+| Rung | Question type | Example (this workshop) |
+|------|---------------|-------------------------|
+| **1. Association** | What do we observe together? | "Commits declined and the top contributor went quiet" |
+| **2. Intervention** | What if we *act*? | "What if we recruited a new maintainer?" |
+| **3. Counterfactual** | What if things had been different — *why* did this happen? | "Did maintainer burnout *cause* the decline?" |
+
+Moving up the ladder requires stronger evidence. **Association** needs only observational data. **Intervention** needs experiments or formal causal models (Pearl's `do` operator — "what happens if we force X?"). **Counterfactual** reasoning needs a structural model of how variables influence each other; you cannot get there from correlation alone.
+
+Pearl's core warning: most analytics — and many LLM answers — never leave rung 1. They describe co-occurrence and present it as explanation.
+
+### Evidence tiers — how strong is the claim?
+
+Pearl's ladder classifies the *type* of question. This workshop adds a practical rubric for *how much* an agent can justify:
+
+| Tier | Strength | What it takes | How to phrase it |
+|------|----------|---------------|------------------|
+| 1 | Temporal sequence | A before B in the data | "Following X, we observed Y..." |
+| 2 | Pattern match | Multiple signals fit a known causal pathway template | "This matches a known pattern..." |
+| 3 | Peer comparison | Similar cases without X don't show Y | "Peer projects without X didn't show Y..." |
+| 4 | Statistical test | Tested across many cases | "Across N projects, X predicts Y (p < 0.05)..." |
+
+**Tiers 1–2 stay on Pearl's association rung** — observational evidence only. Tiers 3–4 add comparative or population-level rigor. Interventions and true counterfactuals need experiments or models this workshop does not build.
+
+### What "pattern matching" means here
+
+In Part 2 you define **causal pathways** — plain-English stories of how maintainer attrition or release gaps might lead to decline. `analyze_causal_patterns` does not *prove* those stories. It **pattern-matches**: it checks whether real repo data lines up with nodes in each template (e.g., top contributor inactive *and* contributor count fell).
+
+That is **Tier 2** evidence — structured association, not proof. The pathway may be a plausible explanation, or a seasonal slowdown could fit the same signals. That is why every pathway returns an `alternative_explanation` and the LLM must report the tier honestly.
+
+**This workshop operates at pattern matching (Tier 2).** The goal is responsible *why* reasoning under real constraints, not causal certainty.
 
 ### Two ways to implement
 
@@ -641,16 +666,9 @@ The function returns evidence, not conclusions. It does **not** pick a "winner" 
 - Pathway 001: seasonal slowdown (holidays, summer)
 - Pathway 002: intentional stability in a mature project
 
-### Evidence tiers (use these in Part 3)
+### Evidence tiers (reminder for Part 3)
 
-| Tier | Strength | How to phrase it |
-|------|----------|------------------|
-| 1 | Temporal sequence | "Following X, we observed Y..." |
-| 2 | Pattern match | "This matches a known pattern..." |
-| 3 | Peer comparison | "Similar projects without X didn't show Y..." |
-| 4 | Statistical test | "Across N projects, X predicts Y (p < 0.05)..." |
-
-Your tools are **Tier 2**. The LLM must say so.
+Your tools return **Tier 2** evidence. When the agent narrates causal claims, it must name the tier and include the alternative — never imply statistical proof or intervention-level certainty.
 
 ### Checkpoint
 

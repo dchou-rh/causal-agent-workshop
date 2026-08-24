@@ -53,6 +53,8 @@ These patterns show up whenever an agent has to support real decisions. They are
 
 5. **The data-intelligence boundary scales.** One well-designed tool layer can serve many prompts, personas, and workflows. The intelligence layer adapts; the data layer stays auditable.
 
+Red Hat's Data and AI team reached the same conclusions building an [enterprise data agent](https://www.redhat.com/en/blog/we-built-enterprise-data-agent-and-you-can-too): agents fail when they guess without sources, when business context is missing, and when data and judgment are mixed. Production teams address that with a **data foundation** (one source of truth per domain), a **guidance architecture** (routing rules and documentation the LLM consults before answering), a **staged pipeline** (retrieve → narrow → reason → return, with each step logged), and **skills-based packaging** (capabilities and rules as modular documents the agent loads on demand). Trust, accountability, and inherited access control matter as much as model choice.
+
 This workshop uses **open-source project health on GitHub** instead of customer or business data, so you can build and test the same ideas with free public APIs. The architecture is the lesson: contextualized metrics, causal pathways, honest confidence, and guardrails — packaged so you can reuse them in any domain.
 
 ---
@@ -104,7 +106,7 @@ A small agent that:
 
 ## ADLC: How this workshop is structured
 
-**ADLC** (Agent Development Lifecycle) is a structured discipline for building and operating AI agents in real workflows — not as one-shot demos. [IBM's ADLC framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) maps agent work onto iterative phases (plan → build → test → deploy → operate → monitor), with observability and governance woven through each step.
+**ADLC** (Agent Development Lifecycle) is a structured discipline for building and operating AI agents in real workflows — not as one-shot demos. [IBM's framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) maps agent work onto iterative phases (plan → build → test → deploy → operate → monitor), with observability and governance woven through each step. Development builds and validates in controlled conditions; deployment integrates the agent with real users, systems, and fallbacks; operate-and-monitor phases track latency, task completion, tool failures, and drift after launch.
 
 Traditional software (**SDLC**) is deterministic: the same input yields the same output, and failures usually crash or throw obvious errors. Agents are probabilistic: the same prompt can yield different answers, and failures often look plausible — a confident wrong answer is harder to spot than a stack trace. ADLC addresses that shift through behavioral evaluation, guardrails, and ongoing monitoring rather than ship-once-and-forget.
 
@@ -118,7 +120,7 @@ In 90 minutes we touch five ADLC ideas you can use on any agent project:
 | **Evaluate, don't just demo** | Compare causal vs naive agents; production teams add benchmarks, policy checks, and regression tests |
 | **Package for reuse** | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows |
 
-Each part below calls out which ADLC phase you are in and what deliverable you are producing. **Further reading:** [ADLC overview](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) · [Agent deployment](https://www.ibm.com/think/topics/ai-agent-deployment) · [Lifecycle management](https://www.ibm.com/think/topics/agent-lifecycle-management)
+Each part below calls out which ADLC phase you are in and what deliverable you are producing.
 
 ---
 
@@ -158,6 +160,8 @@ Most "AI agent" tutorials connect an LLM to an API and stop. That produces a **c
 
 This workshop builds an **intelligence agent** — one that grounds every claim in retrieved data and states how confident it should be.
 
+You will build the workshop version of that enterprise split: `tools.py` for auditable facts (your data layer), prompts and `SKILL.md` for how to interpret them (your guidance architecture).
+
 ### Where to draw the line
 
 | Data layer (your Python code) | Intelligence layer (the LLM) |
@@ -181,6 +185,10 @@ Here is what we are building. In a real project, you would figure these out your
 - **Success:** Agent never quotes a metric it did not retrieve; causal claims include evidence tier + alternative
 
 ---
+
+### Live workshop tip (Cursor free tier)
+
+This workshop does **not** require Cursor AI to complete. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. If you want to try Option B, **pair up**: one partner implements Option A while the other uses Cursor chat, or swap roles between parts. Save Cursor for optional debugging — highlight an error and ask one focused question.
 
 ### How Parts 1–3 work
 
@@ -386,7 +394,7 @@ uv run --directory src python -c "from tools import get_repo_health; import json
 
 ### ADLC build note
 
-You just defined the **contract** for your data layer. Every consumer of `get_repo_health` — different prompts, different users — gets the same facts. That is how you build agents that scale beyond a single demo.
+You just defined the **contract** for your data layer. Every consumer of `get_repo_health` — different prompts, different users — gets the same facts. That is how you build agents that scale beyond a single demo. In production, teams call this **data product ownership**: one source of truth, maintained by people who know the domain.
 
 ---
 
@@ -954,7 +962,9 @@ uv run src/agent.py "Should I contribute to psf/requests?"
 
 ### ADLC evaluation note
 
-You just ran a **behavioral comparison** — a core practice in ADLC's test-and-release phase. [IBM recommends](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) structured evaluation against predefined success criteria before deployment: benchmarks, failure-case review, and verification that tool calls work as expected. Here, reading both agents side by side is enough to see why tools + rules matter.
+You just ran a **behavioral comparison** — a core practice in ADLC's test-and-release phase. Production teams add structured evaluation against predefined success criteria: benchmarks, failure-case review, and verification that tool calls work as expected. Here, reading both agents side by side is enough to see why tools + rules matter.
+
+Your pipeline mirrors a staged production design: `get_repo_health` (retrieve facts) → `analyze_causal_patterns` (structured evidence) → LLM (narrative only after data is in hand).
 
 ---
 
@@ -962,7 +972,7 @@ You just ran a **behavioral comparison** — a core practice in ADLC's test-and-
 
 **ADLC phase:** Deploy — move capabilities from prototype into something others can use reliably.
 
-[IBM distinguishes development from deployment](https://www.ibm.com/think/topics/ai-agent-deployment): development builds and validates an agent in controlled conditions; deployment integrates it with real users, data, and business systems. Packaging an [Agent Skill](https://agentskills.io) is a lightweight version of that — connecting your tools and reasoning rules to the editor where people actually work.
+Deployment connects your tools and reasoning rules to the environment where people actually work — not just proving the prototype runs. Packaging an [Agent Skill](https://agentskills.io) ships capability and rules together (`SKILL.md` + `scripts/tools.py`), decoupled from the core agent prompt — the same modular pattern production teams use for skills-based agents.
 
 ### Folder structure
 
@@ -1076,7 +1086,7 @@ Version your skill (`metadata.version` in frontmatter) — the same discipline a
 
 **ADLC phase:** Govern — operate and monitor what you built once it is live.
 
-ADLC does not end at deploy. IBM's operate-and-monitor phases track latency, task completion, tool failures, and model drift — plus audits for permissions and compliance ([lifecycle management](https://www.ibm.com/think/topics/agent-lifecycle-management)).
+ADLC does not end at deploy. Operate-and-monitor practices track latency, task completion, tool failures, and model drift, plus audits for permissions and compliance. Production agents also need visible reasoning (sources, not just answers), clear accountability (data owners maintain guidance; users own decisions), and access control that inherits existing permissions.
 
 ### Run the comparison one more time
 

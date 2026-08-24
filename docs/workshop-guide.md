@@ -104,21 +104,21 @@ A small agent that:
 
 ## ADLC: How this workshop is structured
 
-**ADLC** (Agent Development Lifecycle) is how teams build AI agents responsibly — not as one-shot demos, but as systems you can trust, test, and improve.
+**ADLC** (Agent Development Lifecycle) is a structured discipline for building and operating AI agents in real workflows — not as one-shot demos. [IBM's ADLC framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) maps agent work onto iterative phases (plan → build → test → deploy → operate → monitor), with observability and governance woven through each step.
 
-Traditional software (SDLC) ships code with predictable outputs. Agents are different: the same prompt can produce different answers. ADLC adds practices for that uncertainty.
+Traditional software (**SDLC**) is deterministic: the same input yields the same output, and failures usually crash or throw obvious errors. Agents are probabilistic: the same prompt can yield different answers, and failures often look plausible — a confident wrong answer is harder to spot than a stack trace. ADLC addresses that shift through behavioral evaluation, guardrails, and ongoing monitoring rather than ship-once-and-forget.
 
 In 90 minutes we touch five ADLC ideas you can use on any agent project:
 
 | ADLC principle | What it means here |
 |----------------|-------------------|
-| **Plan before you prompt** | Define what the agent should do, what data it needs, and what "good" looks like |
-| **Separate data from judgment** | Python returns facts; the LLM interprets them |
-| **Build guardrails in** | System prompts, tool boundaries, evidence tiers — not hope the model behaves |
-| **Evaluate, don't just demo** | Compare your causal agent to a naive agent with no tools |
-| **Package for reuse** | Ship tools + rules together as an Agent Skill |
+| **Plan before you prompt** | Align on the problem, success criteria, and data sources — and ask whether an agent is the right tool at all |
+| **Separate data from judgment** | Python returns facts; the LLM interprets them (tools + orchestration, not prompt-only) |
+| **Build guardrails in** | System prompts, tool boundaries, evidence tiers — secure-by-design, not retrofitted |
+| **Evaluate, don't just demo** | Compare causal vs naive agents; production teams add benchmarks, policy checks, and regression tests |
+| **Package for reuse** | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows |
 
-Each part below calls out which ADLC phase you are in and what deliverable you are producing.
+Each part below calls out which ADLC phase you are in and what deliverable you are producing. **Further reading:** [ADLC overview](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) · [Agent deployment](https://www.ibm.com/think/topics/ai-agent-deployment) · [Lifecycle management](https://www.ibm.com/think/topics/agent-lifecycle-management)
 
 ---
 
@@ -936,15 +936,15 @@ uv run src/agent.py "Should I contribute to psf/requests?"
 
 ### ADLC evaluation note
 
-You just ran a **behavioral comparison** — the simplest form of agent evaluation. In production you would automate this with test cases and score outputs. Here, reading both side by side is enough to see why tools + rules matter.
+You just ran a **behavioral comparison** — a core practice in ADLC's test-and-release phase. [IBM recommends](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) structured evaluation against predefined success criteria before deployment: benchmarks, failure-case review, and verification that tool calls work as expected. Here, reading both agents side by side is enough to see why tools + rules matter.
 
 ---
 
 ## Deploy — Part 4: Package as an Agent Skill (12 min)
 
-**ADLC phase:** Deploy — make your agent portable and reusable.
+**ADLC phase:** Deploy — move capabilities from prototype into something others can use reliably.
 
-You will package your tools and reasoning rules as an [Agent Skill](https://agentskills.io) — a folder any compatible editor can load.
+[IBM distinguishes development from deployment](https://www.ibm.com/think/topics/ai-agent-deployment): development builds and validates an agent in controlled conditions; deployment integrates it with real users, data, and business systems. Packaging an [Agent Skill](https://agentskills.io) is a lightweight version of that — connecting your tools and reasoning rules to the editor where people actually work.
 
 ### Folder structure
 
@@ -1050,13 +1050,15 @@ You now have **two deployments** of the same logic:
 
 ### ADLC deploy note
 
-Version your skill (`metadata.version` in frontmatter). When you change thresholds or rules, bump the version — same discipline as any deployable artifact.
+Version your skill (`metadata.version` in frontmatter) — the same discipline as version pinning and rollback in production. Full deployment also integrates agents into business workflows (APIs, CRM, ticketing), defines fallbacks when tools fail, and monitors latency and task-completion rates after launch.
 
 ---
 
 ## Govern: Wrap-up (8 min)
 
-**ADLC phase:** Govern — reflect on what you built and what you would monitor in production.
+**ADLC phase:** Govern — operate and monitor what you built once it is live.
+
+ADLC does not end at deploy. IBM's operate-and-monitor phases track latency, task completion, tool failures, and model drift — plus audits for permissions and compliance ([lifecycle management](https://www.ibm.com/think/topics/agent-lifecycle-management)).
 
 ### Run the comparison one more time
 
@@ -1084,12 +1086,12 @@ uv run src/agent.py
 
 In a real deployment you would also plan for:
 
-- **Monitoring** — track tool call failures, latency, token cost
-- **Evaluation suite** — automated test repos with expected flag values
-- **Access control** — least-privilege GitHub tokens
-- **Drift** — re-check when GitHub API behavior or model versions change
+- **Monitoring** — latency, task completion, tool-call failures, token cost
+- **Evaluation suite** — automated test repos with expected flag values (test-and-release loop)
+- **Access control** — least-privilege tokens; deployed agents often get their own identity and permissions
+- **Drift** — re-check when APIs, prompts, or model versions change
 
-This workshop gives you the foundation. ADLC is the discipline for everything after the demo.
+This workshop gives you the foundation. ADLC is the ongoing discipline — deployment makes an agent part of how work gets done; govern keeps it trustworthy as requirements and models change.
 
 ---
 

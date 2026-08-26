@@ -63,7 +63,7 @@ This workshop uses **open-source project health on GitHub** instead of customer 
 
 No prior Python or terminal experience is required. The [README](../README.md) covers everything you need to get started, including how to use the terminal and run commands.
 
-**Before you begin:** Complete setup in the [README](../README.md). You need Cursor, API keys, and a successful run of `verify.py`.
+**Before you begin:** Complete setup in the [README](../README.md). You need Cursor, API keys, and a successful run of `verify.py`. If you cloned this repo earlier, [update your local copy](#update-your-local-copy) before the workshop starts.
 
 ---
 
@@ -127,6 +127,34 @@ Each part below calls out which ADLC phase you are in and what deliverable you a
 ## Prepare: Setup check (5 min)
 
 **ADLC phase:** Prepare — confirm your environment works before building.
+
+### Update your local copy
+
+If you already have this repo on your machine, pull the latest changes **from the project root** (the folder that contains `src/` and `docs/`):
+
+```bash
+git pull
+```
+
+You should see files update, or `Already up to date.`
+
+**First time here?** Clone the repo instead (see [README — Clone this repository](../README.md#step-4-clone-this-repository)):
+
+```bash
+git clone https://github.com/dchou-rh/causal-agent-workshop.git
+cd causal-agent-workshop
+```
+
+**`git pull` failed?** Your local branch may be behind after a repo update. From the project root:
+
+```bash
+git fetch origin
+git reset --hard origin/main
+```
+
+> **Warning:** `git reset --hard` discards uncommitted changes in this repo. If you started workshop code in `src/` or `.cursor/skills/` and want to keep it, copy those files elsewhere first, pull, then copy them back.
+
+### Run the setup check
 
 From the project root:
 

@@ -1186,17 +1186,6 @@ causal-agent-workshop/
 ├── .venv/                             # ← created by uv sync (virtual environment)
 ├── docs/
 │   └── workshop-guide.md              # This guide (ADLC-aligned)
-├── solutions/                         # Instructor reference (optional)
-│   ├── skills/
-│   │   └── repo-health-analyst/
-│   │       ├── scripts/
-│   │       │   └── tools.py
-│   │       └── SKILL.md
-│   ├── README.md
-│   ├── agent.py
-│   ├── config.py
-│   ├── tools.py
-│   └── verify.py
 ├── src/
 │   ├── agent.py                       # ← you create in Part 3
 │   ├── config.py                      # Groq model selection (GROQ_MODEL)

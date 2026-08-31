@@ -88,9 +88,9 @@ A small agent that:
 | 0:35–0:55 | **Build** | Implement `analyze_causal_patterns` |
 | 0:55–1:10 | **Test & orchestrate** | Wire tools to Groq; compare agents |
 | 1:10–1:22 | **Deploy** | Package as an Agent Skill |
-| 1:22–1:30 | **Govern** | Wrap-up and discussion |
+| 1:22–1:30 | **Compare** | Causal vs naive agent — visual side-by-side |
 
-**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built.
+**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip the optional [Govern appendix](#optional-govern-discussion-8-min) if you are short on time.
 
 ### Quick reference
 
@@ -1182,17 +1182,45 @@ Version your skill (`metadata.version` in frontmatter) — the same discipline a
 
 ---
 
-## Govern: Wrap-up (8 min)
+## Compare: Causal vs naive agent (8 min)
 
-**ADLC phase:** Govern — operate and monitor what you built once it is live.
+**ADLC phase:** Test & orchestrate — behavioral evaluation made visible.
 
-ADLC does not end at deploy. Operate-and-monitor practices track latency, task completion, tool failures, and model drift, plus audits for permissions and compliance. Production agents also need visible reasoning (sources, not just answers), clear accountability (data owners maintain guidance; users own decisions), and access control that inherits existing permissions.
+This is the payoff for Part 3. You built two agents on the same query; now compare them side by side.
 
-### Run the comparison one more time
+### Step 1 — Run both agents
+
+From the project root:
 
 ```bash
 uv run src/agent.py
 ```
+
+Or try another repo:
+
+```bash
+uv run src/agent.py "Analyze the health of facebook/react"
+```
+
+Watch the terminal. The **causal agent** section should show `[Calling get_repo_health(...)]` (and possibly `analyze_causal_patterns`). The **naive agent** section has no tool calls.
+
+### Step 2 — Open the comparison canvas
+
+A **Cursor Canvas** is a live panel you can open beside chat — useful for structured side-by-side comparisons.
+
+**Install the canvas template** (from the project root):
+
+```bash
+CANVAS_DIR="$HOME/.cursor/projects/Users-$(whoami)-Gitlab-causal-agent-workshop/canvases"
+mkdir -p "$CANVAS_DIR"
+cp docs/canvas/agent-comparison.canvas.tsx "$CANVAS_DIR/"
+```
+
+> **Can't find the folder?** In Cursor, open any `.canvas.tsx` file under your project's `.cursor/projects/.../canvases/` path, or ask your facilitator to share their screen — the terminal comparison in Step 1 is enough if canvas setup is blocked.
+
+Open `agent-comparison.canvas.tsx` from the file explorer, then click **Open Canvas** in the editor tab to view it beside your terminal.
+
+The canvas shows:
 
 | | Causal agent | Naive agent |
 |---|---|---|
@@ -1200,7 +1228,29 @@ uv run src/agent.py
 | Context | z-scores, benchmarks | Raw numbers or guesses |
 | Causal claims | Tier + alternatives | Unqualified assertions |
 
-### Discussion questions
+Plus abbreviated sample narratives so you know what *grounded* vs *ungrounded* output looks like.
+
+### Step 3 — Discuss (2 min)
+
+With your terminal output and the canvas open, answer as a group:
+
+1. Did the naive agent quote any number the causal agent did not retrieve?
+2. Did the causal agent state an evidence tier and an alternative?
+3. Which briefing would you send to a colleague deciding whether to adopt the repo?
+
+That three-question check is your evaluation harness — the simplest form of agent testing.
+
+---
+
+## Optional: Govern discussion (8 min)
+
+*Skip this section in a 90-minute session unless you have extra time. The [comparison canvas](#compare-causal-vs-naive-agent-8-min) is the recommended wrap-up.*
+
+**ADLC phase:** Govern — operate and monitor what you built once it is live.
+
+ADLC does not end at deploy. Operate-and-monitor practices track latency, task completion, tool failures, and model drift, plus audits for permissions and compliance. Production agents also need visible reasoning (sources, not just answers), clear accountability (data owners maintain guidance; users own decisions), and access control that inherits existing permissions.
+
+### Discussion questions (optional)
 
 1. **The boundary test.** `is_declining` uses z-score < -1.0. Is the threshold a fact or a judgment? Where does the line fall?
 
@@ -1233,6 +1283,8 @@ After setup, the repo looks like this. Files you create during the workshop are 
 causal-agent-workshop/
 ├── .venv/                             # ← created by uv sync (virtual environment)
 ├── docs/
+│   ├── canvas/
+│   │   └── agent-comparison.canvas.tsx  # Wrap-up comparison (install to Cursor canvases/)
 │   └── workshop-guide.md              # This guide (ADLC-aligned)
 ├── src/
 │   ├── agent.py                       # ← you create in Part 3

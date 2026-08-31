@@ -544,7 +544,11 @@ def analyze_causal_patterns(owner: str, repo: str) -> dict:
                 top = max(contributors, key=lambda c: c.total)
                 last_week = top.weeks[-1] if top.weeks else None
                 if last_week:
-                    week_start = datetime.fromtimestamp(last_week.w, tz=timezone.utc)
+                    week_start = last_week.w
+                    if not isinstance(week_start, datetime):
+                        week_start = datetime.fromtimestamp(week_start, tz=timezone.utc)
+                    elif week_start.tzinfo is None:
+                        week_start = week_start.replace(tzinfo=timezone.utc)
                     days_since = (now - week_start).days
                     observations["maintainer_inactive"] = {
                         "detected": last_week.c == 0 and days_since > 7,

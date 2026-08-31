@@ -1253,6 +1253,15 @@ What you built today maps to a production stack — same layers, different packa
 | Orchestration | Groq loop + `SYSTEM_PROMPT` | Agent runtime — routing, guardrails, memory, fallbacks |
 | Deploy | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing) |
 
+**Agent runtime** — the orchestration row above. In Part 3, that is your `run_agent` loop: it calls the Groq API each turn, reads tool-call requests from the model, runs your Python functions, and appends results back into the conversation until the model returns a final answer. In production, the runtime is the same idea at larger scale — often a service or framework (LangGraph, custom Python, Cursor's agent host) that:
+
+- **Invokes the LLM API** — sends messages, receives completions (inference happens on the provider's side; the runtime is the client)
+- **Executes the tool loop** — parse tool calls, dispatch to MCP or local functions, feed results back
+- **Applies guardrails** — system prompt, routing rules, max turns, policy checks
+- **Handles failures** — retries, alternate model, graceful errors when Groq or GitHub is down
+
+The runtime is the **conductor**, not the musician: it does not host model weights, and it is not your data layer (`tools.py`) or tool server (MCP). Token cost and latency are tracked here because this is where inference calls originate.
+
 **MCP (Model Context Protocol)** — you may have heard this term. It standardizes how AI hosts (Cursor, Claude Desktop, internal platforms) discover and call external tools. In *this* architecture, MCP fits best at the **tool-call layer**: one server exposing `get_repo_health` and `analyze_causal_patterns` so every host shares the same governed API, auth, and audit trail. MCP does **not** replace what you learned today:
 
 - The **data-intelligence boundary** still lives in your Python return shapes (no opinions in tools, evidence tiers in causal output).

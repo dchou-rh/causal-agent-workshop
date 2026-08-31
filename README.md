@@ -44,8 +44,8 @@ The **terminal** (also called the **command line** or **shell**) is a text-based
 
 | Platform    | Easiest option (use this for the workshop)        | Alternative                                                               |
 | ----------- | ------------------------------------------------- | ------------------------------------------------------------------------- |
-| **macOS**   | In Cursor: **View → Terminal**, or press `Cmd+``  | Open **Terminal** from Applications → Utilities                           |
-| **Windows** | In Cursor: **View → Terminal**, or press `Ctrl+`` | Press the **Windows key**, type `PowerShell`, open **Windows PowerShell** |
+| **macOS**   | In Cursor: **View → Terminal**, or press `Cmd+`  | Open **Terminal** from Applications → Utilities                           |
+| **Windows** | In Cursor: **View → Terminal**, or press `Ctrl+` | Press the **Windows key**, type `PowerShell`, open **Windows PowerShell** |
 
 
 A panel opens at the bottom of the screen with a blinking cursor. That is your terminal.
@@ -276,6 +276,8 @@ This gives you 5,000 API requests/hour. The workshop uses ~200.
 5. Switch back to Cursor, open `.env`, and replace `gsk_your_key_here` with the key you just copied
 6. Save the file (`Cmd+S` / `Ctrl+S`)
 
+
+
 #### Enable the workshop models in the Groq Console
 
 Groq does not enable every model for every account by default. Before running the workshop code, log into [console.groq.com](https://console.groq.com) and allow the models this project uses:
@@ -284,8 +286,8 @@ Groq does not enable every model for every account by default. Before running th
 2. Go to **Organization → Limits** ([direct link](https://console.groq.com/settings/limits))
 3. Under model permissions, choose **Only Allow** (or adjust blocks so these models are permitted)
 4. Enable both workshop models:
-   - `openai/gpt-oss-20b` (default)
-   - `qwen/qwen3.6-27b` (optional alternative)
+  - `openai/gpt-oss-20b` (default)
+  - `qwen/qwen3.6-27b` (optional alternative)
 5. Click **Save**
 
 If your account uses a Groq **project**, also check **Settings → Projects → Limits** for the selected project. Project rules cannot allow models blocked at the organization level. See [Groq model permissions](https://console.groq.com/docs/model-permissions) for details.
@@ -294,10 +296,12 @@ Groq gives you 14,400 requests/day on the free tier. The workshop uses about 30 
 
 **Supported models** (set `GROQ_MODEL` in `.env` after enabling them in the console):
 
-| Model | Notes |
-|-------|--------|
-| `openai/gpt-oss-20b` | Default — fast, good tool calling |
-| `qwen/qwen3.6-27b` | Alternative — uncomment in `.env` to switch |
+
+| Model                | Notes                                       |
+| -------------------- | ------------------------------------------- |
+| `openai/gpt-oss-20b` | Default — fast, good tool calling           |
+| `qwen/qwen3.6-27b`   | Alternative — uncomment in `.env` to switch |
+
 
 Run `uv run src/list_models.py` to see which models your API key can access after console setup.
 
@@ -357,7 +361,11 @@ If either line fails:
 
 ---
 
+
+
 ## Troubleshooting
+
+
 
 ### Use Cursor to help you debug
 

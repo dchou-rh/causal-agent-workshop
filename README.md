@@ -1,6 +1,6 @@
 # Build an Intelligence Agent, Not a Chatbot
 
-**A 90-minute workshop on causal reasoning with AI agents.**
+**A 75-minute workshop on causal reasoning with AI agents.**
 
 > *Not what happened. Why it happened. What happens next.*
 

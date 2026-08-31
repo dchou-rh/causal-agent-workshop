@@ -4,7 +4,7 @@
 
 > *Not what happened. Why it happened. What happens next.*
 
-A 90-minute hands-on workshop on building agents that reason about data — not just repeat it.
+A 75-minute hands-on workshop on building agents that reason about data — not just repeat it.
 
 ---
 
@@ -83,14 +83,14 @@ A small agent that:
 | Time | ADLC phase | What you do |
 |------|------------|-------------|
 | 0:00–0:05 | **Prepare** | Run setup check |
-| 0:05–0:15 | **Plan** | Learn the data-intelligence boundary |
-| 0:15–0:35 | **Build** | Implement `get_repo_health` |
-| 0:35–0:55 | **Build** | Implement `analyze_causal_patterns` |
-| 0:55–1:10 | **Test & orchestrate** | Wire tools to Groq; compare agents |
-| 1:10–1:22 | **Deploy** | Package as an Agent Skill |
-| 1:22–1:30 | **Compare** | Causal vs naive agent — visual side-by-side |
+| 0:05–0:13 | **Plan** | Learn the data-intelligence boundary |
+| 0:13–0:30 | **Build** | Implement `get_repo_health` |
+| 0:30–0:47 | **Build** | Implement `analyze_causal_patterns` |
+| 0:47–1:00 | **Test & orchestrate** | Wire tools to Groq; compare agents |
+| 1:00–1:08 | **Deploy** | Package as an Agent Skill |
+| 1:08–1:15 | **Compare** | Causal vs naive agent — visual side-by-side + production architecture close-out |
 
-**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip the optional [Govern appendix](#optional-govern-discussion-8-min) if you are short on time.
+**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip Part 4 step 5 (in-chat skill demo) or the optional [Govern appendix](#optional-govern-discussion-8-min) if you are short on time.
 
 ### Quick reference
 
@@ -110,7 +110,7 @@ A small agent that:
 
 Traditional software (**SDLC**) is deterministic: the same input yields the same output, and failures usually crash or throw obvious errors. Agents are probabilistic: the same prompt can yield different answers, and failures often look plausible — a confident wrong answer is harder to spot than a stack trace. ADLC addresses that shift through behavioral evaluation, guardrails, and ongoing monitoring rather than ship-once-and-forget.
 
-In 90 minutes we touch five ADLC ideas you can use on any agent project:
+In 75 minutes we touch five ADLC ideas you can use on any agent project:
 
 | ADLC principle | What it means here |
 |----------------|-------------------|
@@ -176,7 +176,7 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 ---
 
-## Plan: The data-intelligence boundary (10 min)
+## Plan: The data-intelligence boundary (8 min)
 
 **ADLC phase:** Plan — define the problem, scope, and success criteria.
 
@@ -229,7 +229,7 @@ You can do both — paste the code first, then read the description and try Opti
 
 ---
 
-## Build — Part 1: Data tools with context (20 min)
+## Build — Part 1: Data tools with context (17 min)
 
 **ADLC phase:** Build — implement the data layer with clear boundaries.
 
@@ -426,7 +426,7 @@ You just defined the **contract** for your data layer. Every consumer of `get_re
 
 ---
 
-## Build — Part 2: Causal reasoning (20 min)
+## Build — Part 2: Causal reasoning (17 min)
 
 **ADLC phase:** Build — add structured evidence the LLM can reason over.
 
@@ -724,7 +724,7 @@ You are **building guardrails into the data layer** — alternatives and evidenc
 
 ---
 
-## Test & orchestrate — Part 3: Wire tools to Groq (15 min)
+## Test & orchestrate — Part 3: Wire tools to Groq (13 min)
 
 **ADLC phase:** Test & orchestrate — connect tools to the LLM and evaluate behavior.
 
@@ -1016,11 +1016,13 @@ Your pipeline mirrors a staged production design: `get_repo_health` (retrieve fa
 
 ---
 
-## Deploy — Part 4: Package as an Agent Skill (12 min)
+## Deploy — Part 4: Package as an Agent Skill (8 min)
 
 **ADLC phase:** Deploy — move capabilities from prototype into something others can use reliably.
 
 Deployment connects your tools and reasoning rules to the environment where people actually work — not just proving the prototype runs. Packaging an [Agent Skill](https://agentskills.io) ships capability and rules together (`SKILL.md` + `scripts/tools.py`), decoupled from the core agent prompt — the same modular pattern production teams use for skills-based agents.
+
+**Time tip:** Steps 1–4 fit the 8-minute block. Step 5 (in-chat demo) is optional — skip it if you are behind; terminal validation in step 4 is enough.
 
 ### Folder structure
 
@@ -1182,11 +1184,11 @@ Version your skill (`metadata.version` in frontmatter) — the same discipline a
 
 ---
 
-## Compare: Causal vs naive agent (8 min)
+## Compare: Causal vs naive agent (7 min)
 
-**ADLC phase:** Test & orchestrate — behavioral evaluation made visible.
+**ADLC phase:** Test & orchestrate — behavioral evaluation made visible, then map what you built to production.
 
-This is the payoff for Part 3. You built two agents on the same query; now compare them side by side.
+This is the payoff for Part 3. You built two agents on the same query; now compare them side by side and close with how the same architecture scales beyond the workshop.
 
 ### Step 1 — Run both agents
 
@@ -1240,11 +1242,36 @@ With your terminal output and the canvas open, answer as a group:
 
 That three-question check is your evaluation harness — the simplest form of agent testing.
 
+### Step 4 — From workshop to production (2 min)
+
+What you built today maps to a production stack — same layers, different packaging:
+
+| Layer | What you built | Production equivalent |
+|-------|----------------|----------------------|
+| Data intelligence | `tools.py` | Shared library or service — facts, flags, evidence tiers only |
+| Tool-call / integration | `agent.py` `TOOLS` + dispatch | MCP server, API gateway, or host-native function calling |
+| Orchestration | Groq loop + `SYSTEM_PROMPT` | Agent runtime — routing, guardrails, memory, fallbacks |
+| Deploy | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing) |
+
+**MCP (Model Context Protocol)** — you may have heard this term. It standardizes how AI hosts (Cursor, Claude Desktop, internal platforms) discover and call external tools. In *this* architecture, MCP fits best at the **tool-call layer**: one server exposing `get_repo_health` and `analyze_causal_patterns` so every host shares the same governed API, auth, and audit trail. MCP does **not** replace what you learned today:
+
+- The **data-intelligence boundary** still lives in your Python return shapes (no opinions in tools, evidence tiers in causal output).
+- **Orchestration** still needs an agent loop, system prompt, and routing rules ("call health first, then causal if flags fire").
+- **Skills** and MCP are complementary — a Skill carries *how to interpret* results; MCP carries *how to invoke* the tools.
+
+**Other production essentials** (beyond what fits in 75 minutes):
+
+- **Monitoring** — latency, task completion, tool-call failures, token cost
+- **Evaluation suite** — test repos with expected flag values; rerun after prompt or model changes
+- **Access control** — least-privilege tokens; deployed agents get their own identity and inherited permissions
+- **Fallbacks** — what happens when GitHub rate-limits, Groq is down, or the model skips a tool call
+- **Versioning** — pin model, prompt, and skill versions; rollback when behavior drifts
+
 ---
 
 ## Optional: Govern discussion (8 min)
 
-*Skip this section in a 90-minute session unless you have extra time. The [comparison canvas](#compare-causal-vs-naive-agent-8-min) is the recommended wrap-up.*
+*Skip this section in a 75-minute session unless you have extra time. The [comparison canvas](#compare-causal-vs-naive-agent-7-min) is the recommended wrap-up.*
 
 **ADLC phase:** Govern — operate and monitor what you built once it is live.
 
@@ -1262,14 +1289,13 @@ ADLC does not end at deploy. Operate-and-monitor practices track latency, task c
 
 ### What you would add for production (ADLC govern)
 
-In a real deployment you would also plan for:
+See [Step 4 — From workshop to production](#step-4--from-workshop-to-production-2-min) for the production architecture overview (layers, MCP, monitoring, access control). This optional section goes deeper on ongoing discipline:
 
-- **Monitoring** — latency, task completion, tool-call failures, token cost
-- **Evaluation suite** — automated test repos with expected flag values (test-and-release loop)
-- **Access control** — least-privilege tokens; deployed agents often get their own identity and permissions
 - **Drift** — re-check when APIs, prompts, or model versions change
+- **Accountability** — data owners maintain tool logic; users own decisions based on agent output
+- **Compliance** — audit logs for tool calls, especially when agents access customer or internal data
 
-This workshop gives you the foundation. ADLC is the ongoing discipline — deployment makes an agent part of how work gets done; govern keeps it trustworthy as requirements and models change.
+ADLC does not end at deploy. Govern is the phase that keeps an agent trustworthy as requirements and models change.
 
 ---
 

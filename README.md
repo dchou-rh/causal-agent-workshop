@@ -145,7 +145,7 @@ You should see a version number (for example, `git version 2.47.0`). If you see 
 
 ### Step 3: Install uv and Python
 
-[uv](https://docs.astral.sh/uv/) is a fast Python package manager. It also installs and manages Python for you — you do not need a separate Python installer.
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager. On macOS, uv can also download Python for you. **On Windows, install Python separately** (see below) — uv's managed Python is often blocked by Windows Defender SmartScreen or Smart App Control.
 
 In your terminal, run the command for your platform:
 
@@ -171,9 +171,11 @@ uv --version
 
 You should see something like `uv 0.7.x`.
 
-**Install Python (both platforms):**
+**Install Python**
 
-This workshop requires Python 3.11+. uv downloads it for you — paste and run:
+This workshop requires Python 3.11+.
+
+**macOS** — uv downloads Python for you:
 
 ```bash
 uv python install 3.12
@@ -187,7 +189,25 @@ Verify:
 uv python list
 ```
 
-You should see `3.12` listed. You do not need to run `python` or `pip` directly — `uv run` handles the virtual environment for this project.
+You should see `3.12` listed.
+
+**Windows** — use the official Python installer (avoids SmartScreen blocks on uv-managed Python):
+
+```powershell
+winget install --id Python.Python.3.12 -e --source winget
+```
+
+If prompted, type `Y` and press **Enter**. Close and reopen your terminal after installation.
+
+Verify:
+
+```powershell
+python --version
+```
+
+You should see `Python 3.12.x`. **Do not run** `uv python install` on Windows — use the winget Python above instead.
+
+You do not need to run `pip` directly — `uv run` handles the virtual environment for this project.
 
 ---
 
@@ -208,13 +228,21 @@ Replace the URL above if your fork or organization uses a different path.
 
 Finally, install the project's Python packages. If `uv` is not recognized, close and reopen Cursor so the terminal picks up the newly installed command.
 
+**macOS:**
+
 ```bash
 uv sync
 ```
 
+**Windows:**
+
+```powershell
+uv sync --python 3.12
+```
+
 `uv sync` may take a minute the first time. When it finishes, you should be back at the prompt with no error messages.
 
-`uv sync` creates a virtual environment, installs Python if needed, and installs all dependencies from `pyproject.toml`. You never need to run `pip install` or activate a venv manually — always use `uv run`.
+`uv sync` creates a virtual environment and installs all dependencies from `pyproject.toml`. You never need to run `pip install` or activate a venv manually — always use `uv run`.
 
 ---
 
@@ -245,7 +273,7 @@ Copy-Item .env.sample .env
 
 Now open `.env` by clicking it in the file explorer. You will see placeholder values — you will replace them in the next two steps.
 
-The project loads `.env` automatically. **Never commit your** `.env` **file** — it is already in `.gitignore`.
+The project loads `.env` automatically. **Never commit your** `.env` **file** — it is already in `.gitignore`. **Never paste API keys into Cursor chat**, screenshots, or Discord — if something fails, check that the keys are present in `.env` without sharing them.
 
 ---
 
@@ -356,8 +384,9 @@ If either line fails:
 
 - Open `.env` in Cursor and check that both tokens are present, with no extra spaces or quotes around the values
 - Make sure the file is named exactly `.env` (not `.env.sample`, not `env.txt`)
-- If you used shell exports instead of `.env`, verify they are set: `echo $GITHUB_TOKEN` (macOS/Linux) or `echo $env:GITHUB_TOKEN` (Windows PowerShell)
+- If you used shell exports instead of `.env`, confirm the variables are set (check that `.env` exists and has non-empty values — do not paste tokens into chat to debug)
 - If you get an error about a model not existing or not having access, log into [console.groq.com](https://console.groq.com) and enable the model under **Settings → Organization → Limits** (see Step 7), then run `uv run src/list_models.py` to confirm it appears
+- **Windows only:** If SmartScreen or Smart App Control blocked the command, see [Windows SmartScreen blocked?](#windows-smartscreen-or-smart-app-control-blocked) below
 
 ---
 
@@ -376,6 +405,33 @@ If you run into an error, Cursor can help you figure it out:
 3. Ask something like "What does this error mean?" or "How do I fix this?" or just hit enter.
 
 Cursor can see your project files, so it often gives you a specific fix rather than a generic answer. This works for terminal errors, Python tracebacks, unexpected output — anything you can select.
+
+### Windows: SmartScreen or Smart App Control blocked?
+
+On Windows, `uv run` launches Python from your project's `.venv` folder. If you used `uv python install`, that interpreter is often **unsigned** and Windows may block it — sometimes with **no "Run anyway" option** (especially with **Smart App Control** enabled on Windows 11).
+
+**This is not a virus.** It is a known friction point with uv-managed Python on Windows. **Do not disable SmartScreen or Smart App Control** — that weakens your machine.
+
+**Fix (recommended):** Use official Python from winget instead of uv-managed Python.
+
+1. Install Python if you have not already (Step 3):
+   ```powershell
+   winget install --id Python.Python.3.12 -e --source winget
+   ```
+2. Close and reopen your terminal.
+3. From the project root, remove the old virtual environment and resync:
+   ```powershell
+   Remove-Item -Recurse -Force .venv
+   uv sync --python 3.12
+   ```
+4. Retry:
+   ```powershell
+   uv run src/verify.py
+   ```
+
+**If it still blocks:** Search Windows Settings for **Smart App Control**. If it is on and enforcing, try the winget Python steps above first. As a last resort for the workshop, [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux) avoids this issue entirely — clone and run the workshop inside Ubuntu.
+
+**Sometimes works (classic SmartScreen only):** In File Explorer, go to `.venv\Scripts\`, right-click `python.exe` → **Properties** → check **Unblock** → OK. Retry `uv run src/verify.py`. This does not work when Smart App Control is in enforce mode.
 
 ### Common issues
 
@@ -407,7 +463,7 @@ The free tier allows 30 requests/minute. Wait 60 seconds and retry.
 Close and reopen your terminal after installing uv. On macOS, run `brew install uv` again. On Windows, run the winget command from Step 3 again.
 
 `python: command not found`  
-You do not need a system-wide `python` command. Run `uv python install 3.12`, then always use `uv run src/script.py` for workshop scripts.
+On **macOS**, run `uv python install 3.12`, then always use `uv run src/script.py` for workshop scripts. On **Windows**, install Python with `winget install --id Python.Python.3.12 -e` (Step 3), close and reopen the terminal, then use `uv sync --python 3.12` and `uv run`.
 
 ---
 

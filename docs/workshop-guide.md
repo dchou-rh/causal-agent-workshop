@@ -10,7 +10,7 @@ A 75-minute hands-on workshop on building agents that reason about data — not 
 
 ## Why causal reasoning?
 
-Most agent demos stop at retrieval: pull a metric, summarize it, call it intelligence. In practice, that leaves users with the same question they started with — *so what?*
+Many agent demos emphasize retrieval: pull a metric, summarize it, call it intelligence. In practice, that often leaves users with the same question they started with — *so what?*
 
 Effective decision-support agents are built around a simple idea: users need three things — not one:
 
@@ -32,20 +32,20 @@ Computer scientist **Judea Pearl** ([*The Book of Why*](https://yalebooks.yale.e
 | **2. Intervention** | What if we *do* X? | Estimate P(Y given do(X)) | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?" |
 | **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen | "Would this patient have recovered if they had taken the drug?" |
 
-Pearl's ladder makes a sharp distinction: association is not causation. **Most analytics — and most LLM answers — never leave rung 1.** They narrate co-occurrence as if it were mechanism. Sound causal practice asks *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Agents skip both unless you **engineer** the data and reasoning layers.
+Pearl's ladder makes a sharp distinction: association is not causation. **Many analytics workflows — and many LLM answers — stay on rung 1.** They narrate co-occurrence as if it were mechanism. Sound causal practice asks *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Default agents often skip both unless you **engineer** the data and reasoning layers.
 
 This workshop does not implement `do`-calculus or fit SCMs. It teaches you to **place claims on the ladder honestly** — and to build tools that return evidence at a known tier instead of letting the LLM imply rung 3 from rung 1 data.
 
 ### What this workshop adds to Pearl's ladder
 
-Pearl's rungs classify the **type** of question. In [Part 2](#part-2--build-causal-reasoning-17-min) you will add a practical **evidence tier** rubric (Tiers 1–4) for how strongly an agent can justify a claim from GitHub observational data. Tiers 1–2 remain on the **association rung**; Tiers 3–4 add peer comparison and population-level tests — still not intervention or counterfactual proof without experiments.
+Pearl's rungs classify the **type** of question. In [Part 2](#part-2--build-causal-reasoning-17-min) you will add a practical **evidence tier** rubric (Tiers 1–4) for how strongly an agent *could* justify a claim. **This workshop implements Tiers 1–2 in code**; Tiers 3–4 are described for completeness but are not produced by `tools.py` unless you extend it. Tiers 1–2 remain on the **association rung**; Tiers 3–4 would add peer comparison and population-level tests — still not intervention or counterfactual proof without experiments.
 
 | Design choice | Causal-inference analogue | What you build |
 |---------------|---------------------------|----------------|
-| Contextualized metrics (Part 1) | Baselines reduce naive confounding | z-scores vs self-history, not raw counts |
-| Pathway templates (Part 2) | Explicit DAG fragments / mechanisms | `CAUSAL_PATHWAYS` as domain hypotheses |
+| Contextualized metrics (Part 1) | Historical baselines add context (not confounding adjustment) | z-scores vs self-history, not raw counts |
+| Pathway templates (Part 2) | Mechanism hypotheses (DAG-style stories, not formal graphs) | `CAUSAL_PATHWAYS` as domain templates |
 | `alternative_explanation` | Reporting competing explanations | Every pathway returns a rival story |
-| Evidence tiers in the prompt | Epistemic humility about identification | LLM must label strength, not imply proof |
+| Evidence tiers in the prompt | Epistemic humility about identification | Prompt should require tier labels, not proof |
 | Naive agent (Part 3) | Unidentified causal narration | Confident prose with no instruments |
 
 **Discussion prompt (graduate seminar):** Pick one pathway in Part 2 (e.g. maintainer departure cascade). What **confounders** could make the same observational pattern appear without the proposed mechanism? What data or design would you need to move that claim to rung 2?
@@ -63,27 +63,27 @@ Traditional ML is built to **predict** — given inputs, produce a score or labe
 | **Adaptability** | New questions often mean new features or retraining | Same tools; the LLM adapts answers to the user's question |
 | **Best at** | High-volume pattern matching at scale | Interactive analysis where context and explanation matter |
 
-Neither replaces the other. Production systems often use **both**: ML for scoring at scale, agents for interpretation, investigation, and communication. The mistake is treating an LLM chatbot as a substitute for either — it has no trained model of your domain and no structured evidence unless you build that layer.
+Neither replaces the other. Production systems often use **both**: ML for scoring at scale, agents for interpretation, investigation, and communication. The mistake is treating a general-purpose LLM chatbot as a substitute for either — it has no **domain-specific fitted model** for your data and no structured evidence layer unless you build one.
 
 This workshop focuses on that missing layer: **tools that return auditable facts**, plus **reasoning rules** that force the agent to contextualize metrics, separate correlation from mechanism, and admit uncertainty.
 
-### What we learned building intelligence agents (not chatbots)
+### Design patterns for intelligence agents (not chatbots)
 
-These patterns show up whenever an agent has to support real decisions. They are not domain-specific tricks; they are design choices:
+These patterns show up when an agent must support real decisions. They are design choices, not laws — illustrated here and in Red Hat's [enterprise data agent](https://www.redhat.com/en/blog/we-built-enterprise-data-agent-and-you-can-too) write-up:
 
 1. **Metrics without baselines are noise.** A number only becomes a signal when it is compared to something — history, peers, or expected range. Agents that quote raw counts feel confident and mislead.
 
 2. **Correlation is not an explanation.** Two trends moving together does not mean one caused the other. Useful agents separate *what we observe* from *why we think it happened* — and label how strong that evidence is.
 
-3. **Facts and judgment must stay separate.** Structured data functions should return indicator flags and reference context, not recommendations. The LLM interprets for the user's situation; if opinions are baked into the data layer, the same tool breaks for every role.
+3. **Facts and judgment should stay separate.** Structured data functions should return indicator flags and reference context, not recommendations. The LLM interprets for the user's situation; if opinions are baked into the data layer, the same tool breaks for every role.
 
 4. **Overconfidence is worse than uncertainty.** Strong agents acknowledge alternative explanations and state evidence tier — especially when reasoning from patterns rather than controlled experiments.
 
 5. **The data-intelligence boundary scales.** One well-designed tool layer can serve many prompts, personas, and workflows. The intelligence layer adapts; the data layer stays auditable.
 
-Red Hat's Data and AI team reached the same conclusions building an [enterprise data agent](https://www.redhat.com/en/blog/we-built-enterprise-data-agent-and-you-can-too): agents fail when they guess without sources, when business context is missing, and when data and judgment are mixed. Production teams address that with a **data foundation** (one source of truth per domain), a **guidance architecture** (routing rules and documentation the LLM consults before answering), a **staged pipeline** (retrieve → narrow → reason → return, with each step logged), and **skills-based packaging** (capabilities and rules as modular documents the agent loads on demand). Trust, accountability, and inherited access control matter as much as model choice.
+That blog post argues agents fail when they guess without sources, when business context is missing, and when data and judgment are mixed. Production teams address that with a **data foundation** (one source of truth per domain), a **guidance architecture** (routing rules and documentation the LLM consults before answering), a **staged pipeline** (retrieve → narrow → reason → return, with each step logged), and **skills-based packaging** (capabilities and rules as modular documents the agent loads on demand). Trust, accountability, and inherited access control matter as much as model choice.
 
-This workshop uses **open-source project health on GitHub** instead of customer or business data, so you can build and test the same ideas with free public APIs. The architecture is the lesson: contextualized metrics, causal pathways, honest confidence, and guardrails — packaged so you can reuse them in any domain.
+This workshop uses **open-source project health on GitHub** instead of customer or business data, so you can build and test the same ideas with free public APIs. The architecture is the lesson: contextualized metrics, causal pathways, honest confidence, and guardrails — packaged so you can reuse them in other domains.
 
 ---
 
@@ -103,7 +103,7 @@ A small agent that:
 
 1. **Pulls real data** from GitHub (not guesses)
 2. **Adds context** to every metric (benchmarks, trends, flags)
-3. **Reasons causally** with evidence tiers and alternative explanations
+3. **Reasons causally** with evidence tiers and alternative explanations (when the model follows the rules)
 4. **Packages as a portable Agent Skill** for Cursor and other tools
 
 ---
@@ -139,7 +139,7 @@ A small agent that:
 
 ## ADLC: How this workshop is structured
 
-**ADLC** (Agent Development Lifecycle) is a structured discipline for building and operating AI agents in real workflows — not as one-shot demos. [IBM's framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) maps agent work onto iterative phases:
+**ADLC** (Agent Development Lifecycle) is [IBM's framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) for building and operating AI agents in real workflows — one useful lifecycle model, not an industry-wide standard like SDLC. It maps agent work onto iterative phases:
 
 **plan → build → test → deploy → operate → monitor**
 
@@ -155,7 +155,7 @@ This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as
 | **Build** | Part 1 + Part 2 | `tools.py` — facts, flags, causal evidence |
 | **Test** | Part 3 | `agent.py` — agent loop wired and smoke-tested |
 | **Deploy** | Part 4 | Agent Skill (`SKILL.md` + scripts) |
-| **Evaluate** | Compare: Causal vs naive agent | Behavioral comparison + production architecture |
+| **Evaluate** | Compare: Causal vs naive agent | Behavioral comparison + production architecture *(workshop label — not an IBM phase name)* |
 | **Operate & monitor** | Optional appendix (end of guide) | Drift, accountability, compliance — after launch |
 
 **Pre-workshop setup** ([Prepare](#prepare-setup-check-5-min)) is environment verification only — not an ADLC phase.
@@ -170,7 +170,7 @@ In 75 minutes we also touch five ADLC habits you can use on any agent project:
 |------------|-------------------|
 | **Plan before you prompt** | Align on the problem, success criteria, and data sources — use Cursor Plan mode |
 | **Separate data from judgment** | Python returns facts; the LLM interprets them (tools + orchestration, not prompt-only) |
-| **Build guardrails in** | System prompts, tool boundaries, evidence tiers — secure-by-design, not retrofitted |
+| **Build guardrails in** | System prompts, tool boundaries, evidence tiers — designed in up front, not bolted on after demos break |
 | **Evaluate, don't just demo** | Compare causal vs naive agents; production teams add benchmarks and regression tests |
 | **Package for reuse** | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows |
 
@@ -240,7 +240,7 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 Most "AI agent" tutorials connect an LLM to an API and stop. That produces a **chatbot** — it talks confidently but may invent numbers.
 
-This workshop builds an **intelligence agent** — one that grounds every claim in retrieved data and states how confident it should be.
+This workshop builds an **intelligence agent** — one designed to **tie claims to retrieved data** and state how confident each claim should be. That is the target; you still need prompts, tools, and evaluation to get there reliably.
 
 You will build the workshop version of that enterprise split: `tools.py` for auditable facts (your data layer), prompts and `SKILL.md` for how to interpret them (your guidance architecture).
 
@@ -264,13 +264,13 @@ Here is what we are building. In a real project, you would figure these out your
 - **Problem:** Help someone evaluate open-source project health on GitHub
 - **Inputs:** Repository owner + name (e.g. `pallets/flask`)
 - **Outputs:** Structured metrics, causal evidence, narrative briefing
-- **Success:** Agent never quotes a metric it did not retrieve; causal claims include evidence tier + alternative
+- **Success (target behavior):** Agent should not quote a metric unless a tool returned it; causal claims should include evidence tier + alternative (verify in the [Evaluate](#compare-causal-vs-naive-agent-7-min) section)
 
 ---
 
 ### Try it: Plan in Cursor (~4 min)
 
-**ADLC in practice:** The checklist above is your plan. In Cursor, [**Plan mode**](https://cursor.com/docs/agent/plan-mode) does the same thing before an agent writes code — it researches the codebase, asks clarifying questions, and produces a **reviewable plan** you can edit. That is *plan before you prompt* in action.
+**ADLC in practice:** The checklist above is your plan. In Cursor, [**Plan mode**](https://cursor.com/docs/agent/plan-mode) supports the same *idea* — research the codebase, ask clarifying questions, and produce a **reviewable plan** you can edit before any code runs. That is *plan before you prompt* in action.
 
 #### Steps
 
@@ -347,7 +347,7 @@ You can do both — paste the code first, then read the description and try Opti
 
 ### Why this matters
 
-"This repo had 47 commits last month" is useless without context. Your job is to return **numbers plus benchmarks** so the LLM never has to guess.
+"This repo had 47 commits last month" is weak without context. Your job is to return **numbers plus benchmarks** so the LLM is less tempted to invent context on its own.
 
 ### Two ways to implement
 
@@ -560,7 +560,7 @@ You saw Pearl's three rungs in [Why causal reasoning?](#pearls-ladder--why-why-i
 | **2. Intervention** | What if we *act*? | "Does a smoking-cessation program reduce risk?" | Experiment, quasi-experiment, or identified estimand (Pearl's **do** operator) | **No** — needs design beyond GitHub logs |
 | **3. Counterfactual** | What if things had been different — *why* did this happen? | "Would she have gotten sick if she had never smoked?" | SCM or DAG of mechanisms + untestable assumptions | **No** — needs structural model, not correlation |
 
-The same lesson applies here: most analytics — and many LLM answers — never leave rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the DAG and identification strategy.
+The same lesson applies here: many analytics workflows — and many LLM answers — stay on rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the mechanism and identification strategy behind the template.
 
 **For seminar discussion:** Your `CAUSAL_PATHWAYS` entries are **hypothesized mechanisms** — subgraphs of a larger DAG. Which edges would you need to condition on (backdoor paths) to interpret a pathway match as supportive of X → Y? What would an **instrument** look like in open-source health (if anything)?
 
@@ -575,7 +575,9 @@ Pearl's ladder classifies the *type* of question. This workshop adds a practical
 | 3 | Peer comparison | Similar cases without X don't show Y | "Peer projects without X didn't show Y..." |
 | 4 | Statistical test | Tested across many cases | "Across N projects, X predicts Y (p < 0.05)..." |
 
-**Tiers 1–2 stay on Pearl's association rung** — observational evidence only. Tiers 3–4 add comparative or population-level rigor (closer to **external validity** and **statistical confirmation**, still not `do(X)`). Interventions and true counterfactuals need experiments, instruments, or SCMs this workshop does not build — but your agent must **not pretend** it has them.
+> **Workshop scope:** `analyze_causal_patterns` returns **Tier 2** evidence only. Tiers 3–4 are part of the rubric for honest narration — do not let the LLM claim Tier 3 or 4 unless you build tools that produce peer comparisons or statistical tests.
+
+**Tiers 1–2 stay on Pearl's association rung** — observational evidence only. Tiers 3–4 would add comparative or population-level rigor (closer to **external validity** and **statistical confirmation**, still not `do(X)`). Interventions and true counterfactuals need experiments, instruments, or SCMs this workshop does not build — but your agent should **not pretend** it has them.
 
 | If the agent says… | Implied rung | Honest? |
 |--------------------|--------------|---------|
@@ -586,9 +588,9 @@ Pearl's ladder classifies the *type* of question. This workshop adds a practical
 
 ### What "pattern matching" means here
 
-In Part 2 you define **causal pathways** — plain-English stories of how maintainer attrition or release gaps might lead to decline. Think of each pathway as a **small DAG hypothesis**: nodes are variables you can (imperfectly) proxy from GitHub, edges are claimed mechanisms. `analyze_causal_patterns` does not *prove* those stories. It **pattern-matches**: it checks whether real repo data lines up with nodes in each template (e.g. top contributor inactive *and* contributor count fell).
+In Part 2 you define **causal pathways** — plain-English stories of how maintainer attrition or release gaps might lead to decline. Think of each pathway as a **mechanism template** (a story you could draw as a DAG, but this workshop does not formalize one). `analyze_causal_patterns` does not *prove* those stories. It **pattern-matches**: it checks whether real repo data lines up with a **subset of nodes** you can proxy from GitHub (e.g. top contributor inactive *and* contributor count fell).
 
-That is **Tier 2** evidence — structured association on rung 1, not proof. The pathway may be a plausible explanation, or a seasonal slowdown could fit the same signals. That is why every pathway returns an `alternative_explanation` and the LLM must report the tier honestly — the agent is doing **abductive** reasoning (best story fit), not **causal identification**.
+That is **Tier 2** evidence — structured association on rung 1, not proof. The pathway may be a plausible explanation, or a seasonal slowdown could fit the same signals. That is why every pathway returns an `alternative_explanation` and the system prompt should require reporting the tier honestly — the agent is doing **abductive** reasoning (best story fit), not **causal identification**.
 
 **This workshop operates at pattern matching (Tier 2).** The goal is responsible *why* reasoning under real constraints: explicit mechanisms, alternatives, and ladder placement — not causal certainty or policy prescriptions from observational GitHub data alone.
 
@@ -616,14 +618,13 @@ CAUSAL_PATHWAYS = [
             "submitting PRs. Fewer contributors leads to slower issue resolution "
             "and reduced project visibility."
         ),
-        "nodes": ["maintainer_inactive", "review_slowdown", "contributor_decline"],
+        "nodes": ["maintainer_inactive", "contributor_decline"],
         "detection": {
             "maintainer_inactive": "Top contributor's last commit > 90 days ago",
-            "review_slowdown": "Median days-to-merge increased > 50% vs. 6-month prior",
             "contributor_decline": "Unique contributors this quarter < prior quarter",
         },
         "evidence_tier": 2,
-        "confidence_base": 0.55,
+        "confidence_base": 0.55,  # workshop weight — not empirically calibrated
     },
     {
         "id": "pathway_002",
@@ -633,14 +634,12 @@ CAUSAL_PATHWAYS = [
             "dependents pin to old versions. Pinned versions reduce new "
             "adoption and increase forks as users patch independently."
         ),
-        "nodes": ["no_recent_release", "adoption_stall", "fork_surge"],
+        "nodes": ["no_recent_release"],
         "detection": {
             "no_recent_release": "Last release > 90 days ago",
-            "adoption_stall": "Star growth rate declined",
-            "fork_surge": "Fork-to-star ratio increasing",
         },
         "evidence_tier": 2,
-        "confidence_base": 0.45,
+        "confidence_base": 0.45,  # workshop weight — not empirically calibrated
     },
 ]
 
@@ -741,9 +740,10 @@ def analyze_causal_patterns(owner: str, repo: str) -> dict:
         "results": results,
         "retrieved_at": now.isoformat(),
         "methodology": (
-            "Template matching against predefined causal DAGs. "
+            "Template matching against predefined pathway hypotheses. "
             "Evidence tier 2 = pattern match (not statistical test). "
-            "Confidence is adjusted by the fraction of pathway nodes observed."
+            "adjusted_confidence = confidence_base × match_strength; "
+            "confidence_base is a workshop weight, not a calibrated probability."
         ),
     }
 
@@ -778,14 +778,14 @@ Implement Part 2 in src/tools.py: CAUSAL_PATHWAYS, analyze_causal_patterns, and 
 Replace the NotImplementedError stubs. Add CAUSAL_PATHWAYS after _classify_trend with exactly two pathways:
 
 1. pathway_001 — Maintainer Departure Cascade
-   - mechanism: core maintainer stops contributing → review slowdown → contributor decline
-   - evidence_tier: 2, confidence_base: 0.55
-   - nodes to check: maintainer_inactive, contributor_decline
+   - mechanism (full story): core maintainer stops → review slowdown → contributor decline
+   - nodes checked in workshop code: maintainer_inactive, contributor_decline only
+   - evidence_tier: 2, confidence_base: 0.55 (workshop weight, not calibrated)
 
 2. pathway_002 — Release Drought
-   - mechanism: 90+ days without release → adoption stall → fork surge
-   - evidence_tier: 2, confidence_base: 0.45
-   - nodes to check: no_recent_release
+   - mechanism (full story): long gap without release → adoption stall → fork surge
+   - nodes checked in workshop code: no_recent_release only
+   - evidence_tier: 2, confidence_base: 0.45 (workshop weight, not calibrated)
 
 analyze_causal_patterns(owner, repo) must:
 - For pathway 001: check top contributor's last active week; compare unique contributors in the recent 13 weeks vs the prior 13 weeks
@@ -805,12 +805,12 @@ Use the existing gh client. Match the existing code style. Do not add new depend
 
 If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
 
-**`CAUSAL_PATHWAYS`** is a list of known cause-effect chains in open-source projects. Each pathway has:
+**`CAUSAL_PATHWAYS`** is a list of hypothesized cause-effect chains in open-source projects. Each pathway's `mechanism` field describes the full story; the workshop code checks only the nodes listed in `nodes` (a deliberate simplification).
 
-- **Pathway 001 — Maintainer Departure Cascade:** A core maintainer stops contributing, which slows pull request reviews, which discourages external contributors, which leads to slower issue resolution.
-- **Pathway 002 — Release Drought:** A project goes 90+ days without a release, which causes downstream dependents to pin old versions, which reduces new adoption and increases forks.
+- **Pathway 001 — Maintainer Departure Cascade:** Mechanism claims maintainer drop-off → slower reviews → fewer contributors. **Checked in code:** top contributor inactive; unique contributors declined quarter-over-quarter.
+- **Pathway 002 — Release Drought:** Mechanism claims long release gaps → adoption stall → fork surge. **Checked in code:** days since last release (or no releases found).
 
-Each pathway includes an `id`, `name`, `mechanism` (the causal chain in plain English), `nodes` (the steps in the chain to check), `detection` rules, an `evidence_tier` of 2 (pattern match, not statistical proof), and a `confidence_base` score.
+Each pathway includes an `id`, `name`, `mechanism`, `nodes` (what the code actually checks), `detection` rules, `evidence_tier` of 2, and a `confidence_base` score (**arbitrary workshop weight**, scaled by `match_strength` — not a calibrated probability).
 
 **`analyze_causal_patterns(owner, repo)`** checks each pathway against real data from the repository:
 
@@ -830,7 +830,7 @@ The function returns evidence, not conclusions. It does **not** pick a "winner" 
 
 ### Evidence tiers (reminder for Part 3)
 
-Your tools return **Tier 2** evidence. When the agent narrates causal claims, it must name the tier and include the alternative — never imply statistical proof or intervention-level certainty.
+Your tools return **Tier 2** evidence. When the agent narrates causal claims, the system prompt should require naming the tier and including the alternative — and should not imply statistical proof or intervention-level certainty. Compliance is something you **evaluate**, not something Python enforces.
 
 ### Checkpoint
 
@@ -978,8 +978,7 @@ RULES YOU MUST FOLLOW:
    of raw data.
 """
 
-
-# Agent loop — LLM decides which tools to call, Python runs them, LLM synthesizes
+> **Note:** `MUST` / `Never` in `SYSTEM_PROMPT` are **instructions to the model**, not guarantees enforced by Python. You still evaluate compliance in the Compare section.
 def run_agent(user_message: str) -> str:
     """Run the full agent loop: user -> LLM -> tools -> LLM -> response."""
     messages = [
@@ -1121,7 +1120,7 @@ uv run src/agent.py
 
 - Terminal shows `[Calling get_repo_health(...)]`
 - Causal agent output cites real metrics with context
-- Naive agent invents or guesses numbers — **that is the point**
+- Naive agent often invents or guesses numbers — **that is the typical contrast** (re-run if your model happens to know the repo from pretraining)
 
 ### Try other repos
 
@@ -1283,7 +1282,7 @@ This step is how you confirm the skill works *inside* Cursor — chat is what ac
 
 > Analyze the health of pallets/flask
 
-Cursor should load your skill, run your scripts, and follow your rules.
+Cursor **may** load your skill, run your scripts, and follow your rules — if it does not, confirm the skill path and `description` in `SKILL.md`, or rely on the terminal tests in step 4.
 
 **No chat quota left?** You already validated the skill in step 4 via the terminal. You can skip this step and still count Part 4 complete — you just will not see Cursor route through `SKILL.md` automatically.
 
@@ -1348,7 +1347,7 @@ The canvas shows:
 
 | | Causal agent | Naive agent |
 |---|---|---|
-| Data source | GitHub API | None (hallucination risk) |
+| Data source | GitHub API (tool calls) | No tools — often guesses or pretraining recall |
 | Context | z-scores, benchmarks | Raw numbers or guesses |
 | Causal claims | Tier + alternatives | Unqualified assertions |
 
@@ -1485,8 +1484,10 @@ uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets
 
 ### The five rules
 
-1. Never present a number without reference context.
-2. Never let a data function return opinions.
+Target behavior for the causal agent (enforce via prompts and evaluation, not Python alone):
+
+1. Do not present a number without reference context.
+2. Do not let a data function return opinions.
 3. Every causal claim states its evidence tier.
 4. Every causal claim acknowledges an alternative.
 5. The LLM judges. The functions fact.

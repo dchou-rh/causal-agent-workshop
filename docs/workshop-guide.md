@@ -8,7 +8,7 @@ A 75-minute hands-on workshop on building agents that reason about data — not 
 
 ## Start here — setup check (5 min)
 
-**Not an ADLC phase** — environment verification before **Plan**. If you completed [pre-workshop setup](../README.md) days or weeks ago, run through this **at the start of the workshop** so you have the latest files and a working environment.
+**Not an ADLC phase** — environment verification before **Plan**. If you already completed the [pre-workshop setup](../README.md), run through this **at the start of the workshop** so you have the latest files and a working environment.
 
 ### 1. Sync the latest files
 

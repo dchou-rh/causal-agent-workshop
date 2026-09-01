@@ -32,7 +32,7 @@ Computer scientist **Judea Pearl** ([*The Book of Why*](https://yalebooks.yale.e
 | **2. Intervention** | What if we *do* X? | Estimate P(Y given do(X)) | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?" |
 | **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen | "Would this patient have recovered if they had taken the drug?" |
 
-Pearl's central warning for agent builders: **most analytics — and most LLM answers — never leave rung 1.** They narrate co-occurrence as if it were mechanism. Graduate training teaches you to ask *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Agents skip both unless you **engineer** the data and reasoning layers.
+Pearl's ladder makes a sharp distinction: association is not causation. **Most analytics — and most LLM answers — never leave rung 1.** They narrate co-occurrence as if it were mechanism. Sound causal practice asks *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Agents skip both unless you **engineer** the data and reasoning layers.
 
 This workshop does not implement `do`-calculus or fit SCMs. It teaches you to **place claims on the ladder honestly** — and to build tools that return evidence at a known tier instead of letting the LLM imply rung 3 from rung 1 data.
 
@@ -560,7 +560,7 @@ You saw Pearl's three rungs in [Why causal reasoning?](#pearls-ladder--why-why-i
 | **2. Intervention** | What if we *act*? | "Does a smoking-cessation program reduce risk?" | Experiment, quasi-experiment, or identified estimand (Pearl's **do** operator) | **No** — needs design beyond GitHub logs |
 | **3. Counterfactual** | What if things had been different — *why* did this happen? | "Would she have gotten sick if she had never smoked?" | SCM or DAG of mechanisms + untestable assumptions | **No** — needs structural model, not correlation |
 
-Pearl's core warning: most analytics — and many LLM answers — never leave rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the DAG and identification strategy.
+The same lesson applies here: most analytics — and many LLM answers — never leave rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the DAG and identification strategy.
 
 **For seminar discussion:** Your `CAUSAL_PATHWAYS` entries are **hypothesized mechanisms** — subgraphs of a larger DAG. Which edges would you need to condition on (backdoor paths) to interpret a pathway match as supportive of X → Y? What would an **instrument** look like in open-source health (if anything)?
 

@@ -133,19 +133,7 @@ These patterns show up when an agent must support real decisions. They are desig
 
 5. **The data-intelligence boundary scales.** One well-designed tool layer can serve many prompts, personas, and workflows. The intelligence layer adapts; the data layer stays auditable.
 
-That blog post argues agents fail when they guess without sources, when business context is missing, and when data and judgment are mixed. Production teams address that with a **data foundation** (one source of truth per domain), a **guidance architecture** (routing rules and documentation the LLM consults before answering), a **staged pipeline** (retrieve → narrow → reason → return, with each step logged), and **skills-based packaging** (capabilities and rules as modular documents the agent loads on demand). Trust, accountability, and inherited access control matter as much as model choice.
-
-This workshop uses **open-source project health on GitHub** instead of customer or business data, so you can build and test the same ideas with free public APIs. The architecture is the lesson: contextualized metrics, causal pathways, honest confidence, and guardrails — packaged so you can reuse them in other domains.
-
----
-
-## Who this is for
-
-Designed for **graduate students and researchers** building or evaluating AI agents — especially those with exposure to statistics, causal inference, or ML who want a hands-on bridge from **identification and evidence** to **agent architecture**.
-
-No prior Python or terminal experience is required. The [README](../README.md) covers everything you need to get started, including how to use the terminal and run commands. Familiarity with Pearl's ladder, DAGs, or observational causal methods will deepen the discussion; the workshop is self-contained if you are new to agents.
-
-**Before you begin:** Complete setup in the [README](../README.md). You need Cursor, API keys, and a successful run of `verify.py`. At the workshop start, run the [setup check](#start-here--setup-check-5-min) (sync files + verify).
+Agents can fail when they guess without sources, when business context is missing, and when data and judgment are mixed. Production teams address that with a **data foundation** (one source of truth per domain), a **guidance architecture** (routing rules and documentation the LLM consults before answering), a **staged pipeline** (retrieve → narrow → reason → return, with each step logged), and **skills-based packaging** (capabilities and rules as modular documents the agent loads on demand). Trust, accountability, and inherited access control matter as much as model choice.
 
 ---
 
@@ -191,7 +179,7 @@ A small agent that:
 
 ## ADLC: How this workshop is structured
 
-**ADLC** (Agent Development Lifecycle) is [IBM's framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) for building and operating AI agents in real workflows — one useful lifecycle model, not an industry-wide standard like SDLC. It maps agent work onto iterative phases:
+**ADLC** (Agent Development Lifecycle) is an emerging industry trend for building and operating AI agents in real workflows — analogous to how SDLC structures traditional software delivery. Vendors and teams define the phases differently; there is no single standard yet. **This workshop uses [IBM's ADLC framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc)** as its organizing model:
 
 **plan → build → test → deploy → operate → monitor**
 

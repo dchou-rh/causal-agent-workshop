@@ -83,7 +83,7 @@ A small agent that:
 | Time | ADLC phase | What you do |
 |------|------------|-------------|
 | 0:00–0:05 | **Prepare** | Run setup check |
-| 0:05–0:13 | **Plan** | Learn the data-intelligence boundary |
+| 0:05–0:13 | **Plan** | Data-intelligence boundary + Cursor Plan mode |
 | 0:13–0:30 | **Build** | Implement `get_repo_health` |
 | 0:30–0:47 | **Build** | Implement `analyze_causal_patterns` |
 | 0:47–1:00 | **Test & orchestrate** | Wire tools to Groq; compare agents |
@@ -178,9 +178,9 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 ## Plan: The data-intelligence boundary (8 min)
 
-**ADLC phase:** Plan — define the problem, scope, and success criteria.
+**ADLC phase:** Plan — define the problem, scope, and success criteria. Practice **Plan mode** in Cursor before any code.
 
-*No coding in this section. Follow along and discuss.*
+*Light coding-free discussion, then a short Plan-mode exercise (~4 min).*
 
 ### The core question
 
@@ -214,9 +214,64 @@ Here is what we are building. In a real project, you would figure these out your
 
 ---
 
+### Try it: Plan in Cursor (~4 min)
+
+**ADLC in practice:** The checklist above is your plan. In Cursor, [**Plan mode**](https://cursor.com/docs/agent/plan-mode) does the same thing before an agent writes code — it researches the codebase, asks clarifying questions, and produces a **reviewable plan** you can edit. That is *plan before you prompt* in action.
+
+#### Steps
+
+1. Open Cursor chat (**`Cmd+L`** / **`Ctrl+L`**).
+2. Press **`Shift+Tab`** from the chat input (or use the **mode picker**) until the mode shows **Plan**.
+3. Copy the prompt below, paste it into chat, and press **Enter**.
+4. Answer any clarifying questions Cursor asks (pick sensible defaults if you are unsure).
+5. When the plan appears, read it — especially which work belongs in `tools.py` vs. the LLM.
+
+**Do not click Build yet.** The learning goal is to **review the plan** against the data-intelligence boundary. Build switches to Agent mode and starts editing files — save that for [Option B](#option-b-let-cursor-write-it) in Parts 1–3 if you want.
+
+> **Workshop quota:** Plan mode uses one Agent session. In a live session, the facilitator can demo on one screen while the room discusses the plan. Pairs work too: one partner runs Plan mode, the other scores the plan against the table above.
+
+#### Copy-paste prompt
+
+```
+Plan how to implement this workshop's GitHub repo health agent (causal-agent-workshop).
+
+Before any code, produce a structured implementation plan that covers:
+
+1. Problem, inputs, outputs, and success criteria (measurable — e.g. no hallucinated metrics)
+2. Data layer (src/tools.py): what each tool returns — facts, flags, z-scores, evidence tiers only; explicitly what must NOT be returned (opinions, recommendations, severity labels)
+3. Intelligence layer: system prompt rules, evidence tiers, when to call which tool
+4. Files and order of work (Parts 1–4: tools → agent.py → Agent Skill)
+5. Risks and guardrails (overconfidence, correlation vs causation, token/API limits)
+
+Read the existing stubs in src/tools.py and the workshop structure in docs/workshop-guide.md for context.
+
+Planning only — do not implement or edit files yet.
+```
+
+#### Review the plan (2 min)
+
+With the plan open, check as a group (or with your partner):
+
+1. Does the plan keep **facts in Python** and **judgment in the LLM** — matching the table above?
+2. Are success criteria **testable** (not vague like "good answers")?
+3. What would you change before clicking **Build**?
+
+Optional: click **Save to workspace** on the plan file so you can reference it during Parts 1–4.
+
+#### Connect to the rest of the workshop
+
+| Path | What you do |
+|------|-------------|
+| **Default (Option A)** | Copy the working code from this guide in Parts 1–3 — compare your mental model to the plan you just reviewed |
+| **Option B** | Return to your plan in Parts 1–3 and click **Build** on the relevant steps, or start a fresh Plan for each part — then diff Cursor's output against Option A |
+
+Either way, the plan is the contract. The code is the implementation.
+
+---
+
 ### Live workshop tip (Cursor free tier)
 
-This workshop does **not** require Cursor AI for Parts 1–3. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. **Part 4** includes an optional in-chat skill demo (step 5) — reserve one Agent request for that, or skip it and verify your skill with the terminal commands in step 4. If you want to try Option B in Parts 1–3, **pair up**: one partner implements Option A while the other uses Cursor chat, or swap roles between parts.
+This workshop does **not** require Cursor AI for Parts 1–3. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. The **Plan** section above uses one Plan session (review only — no Build). **Part 4** includes an optional in-chat skill demo (step 5) — reserve one Agent request for that, or skip it and verify your skill with the terminal commands in step 4. If you want to try Option B in Parts 1–3, **pair up**: one partner implements Option A while the other uses Cursor Plan then Build, or swap roles between parts.
 
 ### How Parts 1–3 work
 

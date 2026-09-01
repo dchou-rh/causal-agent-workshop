@@ -102,8 +102,6 @@ Pearl's rungs classify the **type** of question. In [Part 2](#part-2--build-caus
 | Evidence tiers in the prompt | Epistemic humility about identification | Prompt should require tier labels, not proof |
 | Naive agent (Part 3) | Unidentified causal narration | Confident prose with no instruments |
 
-**Discussion prompt (graduate seminar):** Pick one pathway in Part 2 (e.g. maintainer departure cascade). What **confounders** could make the same observational pattern appear without the proposed mechanism? What data or design would you need to move that claim to rung 2?
-
 ### How this differs from traditional machine learning
 
 Traditional ML is built to **predict** — given inputs, produce a score or label trained on historical examples. That works well when you have lots of labeled data, a stable problem, and users who only need the prediction itself.

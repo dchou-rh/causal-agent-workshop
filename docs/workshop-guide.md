@@ -22,6 +22,34 @@ Effective decision-support agents are built around a simple idea: users need thr
 
 That framing — *not what happened, but why it happened and what happens next* — is why this workshop goes beyond wiring an LLM to an API.
 
+### Pearl's ladder — why "why" is not one question
+
+Computer scientist **Judea Pearl** ([*The Book of Why*](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)) formalized a core problem in analytics: models can **predict** well yet **explain** poorly. Causal questions live on a **ladder of causation** with three rungs, each requiring strictly stronger assumptions and data:
+
+| Rung | Question type | Formal move | What it requires | Example |
+|------|---------------|-------------|------------------|---------|
+| **1. Association** | What co-occurs in the data? | See P(Y given X) | Observational data only — correlation, trends, co-movement | "Ice cream sales and drowning deaths both rise in summer" |
+| **2. Intervention** | What if we *do* X? | Estimate P(Y given do(X)) | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?" |
+| **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen | "Would this patient have recovered if they had taken the drug?" |
+
+Pearl's central warning for agent builders: **most analytics — and most LLM answers — never leave rung 1.** They narrate co-occurrence as if it were mechanism. Graduate training teaches you to ask *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Agents skip both unless you **engineer** the data and reasoning layers.
+
+This workshop does not implement `do`-calculus or fit SCMs. It teaches you to **place claims on the ladder honestly** — and to build tools that return evidence at a known tier instead of letting the LLM imply rung 3 from rung 1 data.
+
+### What this workshop adds to Pearl's ladder
+
+Pearl's rungs classify the **type** of question. In [Part 2](#part-2--build-causal-reasoning-17-min) you will add a practical **evidence tier** rubric (Tiers 1–4) for how strongly an agent can justify a claim from GitHub observational data. Tiers 1–2 remain on the **association rung**; Tiers 3–4 add peer comparison and population-level tests — still not intervention or counterfactual proof without experiments.
+
+| Design choice | Causal-inference analogue | What you build |
+|---------------|---------------------------|----------------|
+| Contextualized metrics (Part 1) | Baselines reduce naive confounding | z-scores vs self-history, not raw counts |
+| Pathway templates (Part 2) | Explicit DAG fragments / mechanisms | `CAUSAL_PATHWAYS` as domain hypotheses |
+| `alternative_explanation` | Reporting competing explanations | Every pathway returns a rival story |
+| Evidence tiers in the prompt | Epistemic humility about identification | LLM must label strength, not imply proof |
+| Naive agent (Part 3) | Unidentified causal narration | Confident prose with no instruments |
+
+**Discussion prompt (graduate seminar):** Pick one pathway in Part 2 (e.g. maintainer departure cascade). What **confounders** could make the same observational pattern appear without the proposed mechanism? What data or design would you need to move that claim to rung 2?
+
 ### How this differs from traditional machine learning
 
 Traditional ML is built to **predict** — given inputs, produce a score or label trained on historical examples. That works well when you have lots of labeled data, a stable problem, and users who only need the prediction itself.
@@ -61,7 +89,9 @@ This workshop uses **open-source project health on GitHub** instead of customer 
 
 ## Who this is for
 
-No prior Python or terminal experience is required. The [README](../README.md) covers everything you need to get started, including how to use the terminal and run commands.
+Designed for **graduate students and researchers** building or evaluating AI agents — especially those with exposure to statistics, causal inference, or ML who want a hands-on bridge from **identification and evidence** to **agent architecture**.
+
+No prior Python or terminal experience is required. The [README](../README.md) covers everything you need to get started, including how to use the terminal and run commands. Familiarity with Pearl's ladder, DAGs, or observational causal methods will deepen the discussion; the workshop is self-contained if you are new to agents.
 
 **Before you begin:** Complete setup in the [README](../README.md). You need Cursor, API keys, and a successful run of `verify.py`. If you cloned this repo earlier, [update your local copy](#update-your-local-copy) before the workshop starts.
 
@@ -82,51 +112,75 @@ A small agent that:
 
 | Time | ADLC phase | What you do |
 |------|------------|-------------|
-| 0:00–0:05 | **Prepare** | Run setup check |
+| 0:00–0:05 | *(Pre-workshop)* | Run setup check |
 | 0:05–0:13 | **Plan** | Data-intelligence boundary + Cursor Plan mode |
-| 0:13–0:30 | **Build** | Implement `get_repo_health` |
-| 0:30–0:47 | **Build** | Implement `analyze_causal_patterns` |
-| 0:47–1:00 | **Test & orchestrate** | Wire tools to Groq; compare agents |
-| 1:00–1:08 | **Deploy** | Package as an Agent Skill |
-| 1:08–1:15 | **Compare** | Causal vs naive agent — visual side-by-side + production architecture close-out |
+| 0:13–0:30 | **Build** | Part 1 — `get_repo_health` |
+| 0:30–0:47 | **Build** | Part 2 — `analyze_causal_patterns` |
+| 0:47–1:00 | **Test** | Part 3 — wire tools to Groq; smoke-test the agent |
+| 1:00–1:08 | **Deploy** | Part 4 — package as an Agent Skill |
+| 1:08–1:15 | **Evaluate** | Compare causal vs naive agent + production architecture close-out |
 
-**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip Part 4 step 5 (in-chat skill demo) or the optional [Govern appendix](#optional-govern-discussion-8-min) if you are short on time.
+**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip Part 4 step 5 (in-chat skill demo) or the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
 
 ### Quick reference
 
-| Part | File | What you build |
-|------|------|----------------|
-| Setup | `src/verify.py` | Confirm GitHub + Groq access |
-| Part 1 | `src/tools.py` | `get_repo_health` with contextual benchmarks |
-| Part 2 | `src/tools.py` | `analyze_causal_patterns` causal reasoning layer |
-| Part 3 | `src/agent.py` | Full Groq agent with function calling |
-| Part 4 | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill |
+| ADLC phase | Part | File | What you build |
+|------------|------|------|----------------|
+| *(Pre-workshop)* | Setup | `src/verify.py` | Confirm GitHub + Groq access |
+| **Plan** | — | — | Problem scope, data-intelligence boundary, Cursor plan |
+| **Build** | 1 | `src/tools.py` | `get_repo_health` with contextual benchmarks |
+| **Build** | 2 | `src/tools.py` | `analyze_causal_patterns` causal reasoning layer |
+| **Test** | 3 | `src/agent.py` | Full Groq agent with function calling |
+| **Deploy** | 4 | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill |
+| **Evaluate** | — | — | Causal vs naive comparison + production close-out |
+| **Operate & monitor** *(optional)* | — | — | Ongoing discipline after launch — see appendix |
 
 ---
 
 ## ADLC: How this workshop is structured
 
-**ADLC** (Agent Development Lifecycle) is a structured discipline for building and operating AI agents in real workflows — not as one-shot demos. [IBM's framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) maps agent work onto iterative phases (plan → build → test → deploy → operate → monitor), with observability and governance woven through each step. Development builds and validates in controlled conditions; deployment integrates the agent with real users, systems, and fallbacks; operate-and-monitor phases track latency, task completion, tool failures, and drift after launch.
+**ADLC** (Agent Development Lifecycle) is a structured discipline for building and operating AI agents in real workflows — not as one-shot demos. [IBM's framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc) maps agent work onto iterative phases:
+
+**plan → build → test → deploy → operate → monitor**
 
 Traditional software (**SDLC**) is deterministic: the same input yields the same output, and failures usually crash or throw obvious errors. Agents are probabilistic: the same prompt can yield different answers, and failures often look plausible — a confident wrong answer is harder to spot than a stack trace. ADLC addresses that shift through behavioral evaluation, guardrails, and ongoing monitoring rather than ship-once-and-forget.
 
-In 75 minutes we touch five ADLC ideas you can use on any agent project:
+### How the workshop maps to ADLC
 
-| ADLC principle | What it means here |
-|----------------|-------------------|
-| **Plan before you prompt** | Align on the problem, success criteria, and data sources — and ask whether an agent is the right tool at all |
+This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as the wrap-up. **Operate & monitor** is optional reading after the session.
+
+| IBM ADLC phase | Workshop section | What you produce |
+|----------------|------------------|------------------|
+| **Plan** | Plan: The data-intelligence boundary | Problem scope, success criteria, Cursor plan |
+| **Build** | Part 1 + Part 2 | `tools.py` — facts, flags, causal evidence |
+| **Test** | Part 3 | `agent.py` — agent loop wired and smoke-tested |
+| **Deploy** | Part 4 | Agent Skill (`SKILL.md` + scripts) |
+| **Evaluate** | Compare: Causal vs naive agent | Behavioral comparison + production architecture |
+| **Operate & monitor** | Optional appendix (end of guide) | Drift, accountability, compliance — after launch |
+
+**Pre-workshop setup** ([Prepare](#prepare-setup-check-5-min)) is environment verification only — not an ADLC phase.
+
+**Why Evaluate comes after Deploy on the schedule:** Part 3 smoke-tests the agent during **Test**. The **Evaluate** section at the end is the deliberate payoff — side-by-side comparison after you have packaged the skill — so you leave with a clear picture of why tools + rules matter.
+
+**The four numbered parts** align to ADLC as: **Build** (Parts 1–2), **Test** (Part 3), **Deploy** (Part 4). Plan and Evaluate are separate sections that bookend the hands-on build.
+
+In 75 minutes we also touch five ADLC habits you can use on any agent project:
+
+| ADLC habit | What it means here |
+|------------|-------------------|
+| **Plan before you prompt** | Align on the problem, success criteria, and data sources — use Cursor Plan mode |
 | **Separate data from judgment** | Python returns facts; the LLM interprets them (tools + orchestration, not prompt-only) |
 | **Build guardrails in** | System prompts, tool boundaries, evidence tiers — secure-by-design, not retrofitted |
-| **Evaluate, don't just demo** | Compare causal vs naive agents; production teams add benchmarks, policy checks, and regression tests |
+| **Evaluate, don't just demo** | Compare causal vs naive agents; production teams add benchmarks and regression tests |
 | **Package for reuse** | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows |
 
-Each part below calls out which ADLC phase you are in and what deliverable you are producing.
+Each section below calls out which ADLC phase you are in and what deliverable you are producing.
 
 ---
 
 ## Prepare: Setup check (5 min)
 
-**ADLC phase:** Prepare — confirm your environment works before building.
+**Not an ADLC phase** — pre-workshop environment verification. Complete this before **Plan**.
 
 ### Update your local copy
 
@@ -178,7 +232,7 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 ## Plan: The data-intelligence boundary (8 min)
 
-**ADLC phase:** Plan — define the problem, scope, and success criteria. Practice **Plan mode** in Cursor before any code.
+**ADLC phase: Plan** — define the problem, scope, and success criteria. Practice **Plan mode** in Cursor before any code.
 
 *Light coding-free discussion, then a short Plan-mode exercise (~4 min).*
 
@@ -284,9 +338,9 @@ You can do both — paste the code first, then read the description and try Opti
 
 ---
 
-## Build — Part 1: Data tools with context (17 min)
+## Part 1 · Build: Data tools with context (17 min)
 
-**ADLC phase:** Build — implement the data layer with clear boundaries.
+**ADLC phase: Build** — implement the data layer with clear boundaries.
 
 **File:** `src/tools.py`  
 **Function:** `get_repo_health(owner, repo)`
@@ -481,34 +535,38 @@ You just defined the **contract** for your data layer. Every consumer of `get_re
 
 ---
 
-## Build — Part 2: Causal reasoning (17 min)
+## Part 2 · Build: Causal reasoning (17 min)
 
-**ADLC phase:** Build — add structured evidence the LLM can reason over.
+**ADLC phase: Build** — add structured evidence the LLM can reason over.
 
 **File:** `src/tools.py` (same file)  
 **Functions:** `analyze_causal_patterns`, `_get_alternative`
 
 ### Why correlation is not enough
 
-Part 1 tells you *what* is happening. Causal reasoning asks *why* — and requires honesty about how strong the evidence is.
+Part 1 tells you *what* is happening. Causal reasoning asks *why* — and requires honesty about **which rung of Pearl's ladder** your evidence supports.
 
-### Pearl's ladder — three kinds of causal questions
+In observational settings (GitHub timelines, issue trackers, contributor stats), you almost always have **association** data. Confounding is routine: a repo's commit drop might track a maintainer's absence, a holiday quarter, a platform outage, or a shift in project scope. Without a design or model that addresses confounding, a compelling narrative is still **unidentified** — the same statistical pattern fits multiple DAGs.
 
-Computer scientist **Judea Pearl** argued in [*The Book of Why*](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/) that "why" is not one question. His **ladder of causation** separates three levels of reasoning:
+Agents make this worse by default: LLMs are fluent at **post hoc stories**. Your job in Part 2 is to constrain that fluency with **structured hypotheses** (pathways), **competing explanations**, and **explicit tiers** — so the model reasons *over* evidence instead of inventing mechanism.
 
-| Rung | Question type | Example (this workshop) |
-|------|---------------|-------------------------|
-| **1. Association** | What do we observe together? | "Commits declined and the top contributor went quiet" |
-| **2. Intervention** | What if we *act*? | "What if we recruited a new maintainer?" |
-| **3. Counterfactual** | What if things had been different — *why* did this happen? | "Did maintainer burnout *cause* the decline?" |
+### Pearl's ladder — three kinds of causal questions (review)
 
-Moving up the ladder requires stronger evidence. **Association** needs only observational data. **Intervention** needs experiments or formal causal models (Pearl's `do` operator — "what happens if we force X?"). **Counterfactual** reasoning needs a structural model of how variables influence each other; you cannot get there from correlation alone.
+You saw Pearl's three rungs in [Why causal reasoning?](#pearls-ladder--why-why-is-not-one-question). Here is how they map to this lab:
 
-Pearl's core warning: most analytics — and many LLM answers — never leave rung 1. They describe co-occurrence and present it as explanation.
+| Rung | Question type | Example | What it requires | Can this workshop's agent answer it? |
+|------|---------------|---------|------------------|--------------------------------------|
+| **1. Association** | What do we observe together? | "Smokers have higher lung cancer rates" | Observational data only | **Yes** — Parts 1–2 report co-occurring metrics and patterns |
+| **2. Intervention** | What if we *act*? | "Does a smoking-cessation program reduce risk?" | Experiment, quasi-experiment, or identified estimand (Pearl's **do** operator) | **No** — needs design beyond GitHub logs |
+| **3. Counterfactual** | What if things had been different — *why* did this happen? | "Would she have gotten sick if she had never smoked?" | SCM or DAG of mechanisms + untestable assumptions | **No** — needs structural model, not correlation |
+
+Pearl's core warning: most analytics — and many LLM answers — never leave rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the DAG and identification strategy.
+
+**For seminar discussion:** Your `CAUSAL_PATHWAYS` entries are **hypothesized mechanisms** — subgraphs of a larger DAG. Which edges would you need to condition on (backdoor paths) to interpret a pathway match as supportive of X → Y? What would an **instrument** look like in open-source health (if anything)?
 
 ### Evidence tiers — how strong is the claim?
 
-Pearl's ladder classifies the *type* of question. This workshop adds a practical rubric for *how much* an agent can justify:
+Pearl's ladder classifies the *type* of question. This workshop adds a practical rubric for *how much* an agent can justify from **observational GitHub data**:
 
 | Tier | Strength | What it takes | How to phrase it |
 |------|----------|---------------|------------------|
@@ -517,15 +575,24 @@ Pearl's ladder classifies the *type* of question. This workshop adds a practical
 | 3 | Peer comparison | Similar cases without X don't show Y | "Peer projects without X didn't show Y..." |
 | 4 | Statistical test | Tested across many cases | "Across N projects, X predicts Y (p < 0.05)..." |
 
-**Tiers 1–2 stay on Pearl's association rung** — observational evidence only. Tiers 3–4 add comparative or population-level rigor. Interventions and true counterfactuals need experiments or models this workshop does not build.
+**Tiers 1–2 stay on Pearl's association rung** — observational evidence only. Tiers 3–4 add comparative or population-level rigor (closer to **external validity** and **statistical confirmation**, still not `do(X)`). Interventions and true counterfactuals need experiments, instruments, or SCMs this workshop does not build — but your agent must **not pretend** it has them.
+
+| If the agent says… | Implied rung | Honest? |
+|--------------------|--------------|---------|
+| "Following maintainer inactivity, we observed declining commits" | 1 (association) | Yes, at Tier 1 |
+| "This matches a maintainer-departure cascade pattern" | 1 (structured association) | Yes, at Tier 2 |
+| "Adding a maintainer would restore velocity" | 2 (intervention) | **No** — not identified from GitHub logs alone |
+| "The decline would not have happened without burnout" | 3 (counterfactual) | **No** — needs SCM + untestable assumptions |
 
 ### What "pattern matching" means here
 
-In Part 2 you define **causal pathways** — plain-English stories of how maintainer attrition or release gaps might lead to decline. `analyze_causal_patterns` does not *prove* those stories. It **pattern-matches**: it checks whether real repo data lines up with nodes in each template (e.g., top contributor inactive *and* contributor count fell).
+In Part 2 you define **causal pathways** — plain-English stories of how maintainer attrition or release gaps might lead to decline. Think of each pathway as a **small DAG hypothesis**: nodes are variables you can (imperfectly) proxy from GitHub, edges are claimed mechanisms. `analyze_causal_patterns` does not *prove* those stories. It **pattern-matches**: it checks whether real repo data lines up with nodes in each template (e.g. top contributor inactive *and* contributor count fell).
 
-That is **Tier 2** evidence — structured association, not proof. The pathway may be a plausible explanation, or a seasonal slowdown could fit the same signals. That is why every pathway returns an `alternative_explanation` and the LLM must report the tier honestly.
+That is **Tier 2** evidence — structured association on rung 1, not proof. The pathway may be a plausible explanation, or a seasonal slowdown could fit the same signals. That is why every pathway returns an `alternative_explanation` and the LLM must report the tier honestly — the agent is doing **abductive** reasoning (best story fit), not **causal identification**.
 
-**This workshop operates at pattern matching (Tier 2).** The goal is responsible *why* reasoning under real constraints, not causal certainty.
+**This workshop operates at pattern matching (Tier 2).** The goal is responsible *why* reasoning under real constraints: explicit mechanisms, alternatives, and ladder placement — not causal certainty or policy prescriptions from observational GitHub data alone.
+
+**Extension (post-workshop):** To climb Pearl's rungs in production, you would add interventional data (A/B tests on maintainer programs), quasi-experiments (repos that gained/lost maintainers exogenously), or formal SCMs with sensitivity analysis. The architecture you build today — facts in tools, tiers in prompts — scales to those richer sources without changing the data-intelligence boundary.
 
 ### Two ways to implement
 
@@ -779,9 +846,9 @@ You are **building guardrails into the data layer** — alternatives and evidenc
 
 ---
 
-## Test & orchestrate — Part 3: Wire tools to Groq (13 min)
+## Part 3 · Test: Wire tools to Groq (13 min)
 
-**ADLC phase:** Test & orchestrate — connect tools to the LLM and evaluate behavior.
+**ADLC phase: Test** — connect tools to the LLM, run the agent loop, and smoke-test behavior.
 
 **File:** Create `src/agent.py`
 
@@ -1063,17 +1130,17 @@ uv run src/agent.py "Analyze the health of facebook/react"
 uv run src/agent.py "Should I contribute to psf/requests?"
 ```
 
-### ADLC evaluation note
+### ADLC test note
 
-You just ran a **behavioral comparison** — a core practice in ADLC's test-and-release phase. Production teams add structured evaluation against predefined success criteria: benchmarks, failure-case review, and verification that tool calls work as expected. Here, reading both agents side by side is enough to see why tools + rules matter.
+You just **smoke-tested** the agent loop — tool calls fire, metrics come back with context. That is the **Test** phase: integration works. The full **Evaluate** phase comes later in [Compare: Causal vs naive agent](#compare-causal-vs-naive-agent-7-min), where you deliberately compare grounded vs ungrounded output.
 
 Your pipeline mirrors a staged production design: `get_repo_health` (retrieve facts) → `analyze_causal_patterns` (structured evidence) → LLM (narrative only after data is in hand).
 
 ---
 
-## Deploy — Part 4: Package as an Agent Skill (8 min)
+## Part 4 · Deploy: Package as an Agent Skill (8 min)
 
-**ADLC phase:** Deploy — move capabilities from prototype into something others can use reliably.
+**ADLC phase: Deploy** — move capabilities from prototype into something others can use reliably.
 
 Deployment connects your tools and reasoning rules to the environment where people actually work — not just proving the prototype runs. Packaging an [Agent Skill](https://agentskills.io) ships capability and rules together (`SKILL.md` + `scripts/tools.py`), decoupled from the core agent prompt — the same modular pattern production teams use for skills-based agents.
 
@@ -1241,7 +1308,7 @@ Version your skill (`metadata.version` in frontmatter) — the same discipline a
 
 ## Compare: Causal vs naive agent (7 min)
 
-**ADLC phase:** Test & orchestrate — behavioral evaluation made visible, then map what you built to production.
+**ADLC phase: Evaluate** — behavioral comparison made visible, then map what you built to production.
 
 This is the payoff for Part 3. You built two agents on the same query; now compare them side by side and close with how the same architecture scales beyond the workshop.
 
@@ -1333,11 +1400,11 @@ The runtime is the **conductor**, not the musician: it does not host model weigh
 
 ---
 
-## Optional: Govern discussion (8 min)
+## Optional: Operate & monitor discussion (8 min)
 
-*Skip this section in a 75-minute session unless you have extra time. The [comparison canvas](#compare-causal-vs-naive-agent-7-min) is the recommended wrap-up.*
+*Skip this section in a 75-minute session unless you have extra time. The [Compare section](#compare-causal-vs-naive-agent-7-min) is the recommended wrap-up.*
 
-**ADLC phase:** Govern — operate and monitor what you built once it is live.
+**ADLC phase: Operate & monitor** — what happens after deploy once the agent is live.
 
 ADLC does not end at deploy. Operate-and-monitor practices track latency, task completion, tool failures, and model drift, plus audits for permissions and compliance. Production agents also need visible reasoning (sources, not just answers), clear accountability (data owners maintain guidance; users own decisions), and access control that inherits existing permissions.
 
@@ -1351,7 +1418,7 @@ ADLC does not end at deploy. Operate-and-monitor practices track latency, task c
 
 4. **Same data, different users.** How would you change the prompt (not the tools) for a CTO vs. a new contributor?
 
-### What you would add for production (ADLC govern)
+### What you would add for production (operate & monitor)
 
 See [Step 4 — From workshop to production](#step-4--from-workshop-to-production-2-min) for the production architecture overview (layers, MCP, monitoring, access control). This optional section goes deeper on ongoing discipline:
 
@@ -1359,7 +1426,7 @@ See [Step 4 — From workshop to production](#step-4--from-workshop-to-productio
 - **Accountability** — data owners maintain tool logic; users own decisions based on agent output
 - **Compliance** — audit logs for tool calls, especially when agents access customer or internal data
 
-ADLC does not end at deploy. Govern is the phase that keeps an agent trustworthy as requirements and models change.
+ADLC does not end at deploy. Operate & monitor is the phase that keeps an agent trustworthy as requirements and models change.
 
 ---
 

@@ -6,6 +6,60 @@
 
 A 75-minute hands-on workshop on building agents that reason about data — not just repeat it.
 
+## Start here — setup check (5 min)
+
+**Not an ADLC phase** — environment verification before **Plan**. If you completed [pre-workshop setup](../README.md) days or weeks ago, run through this **at the start of the workshop** so you have the latest files and a working environment.
+
+### 1. Sync the latest files
+
+If you cloned this repo during pre-workshop setup, your local copy may be out of date. Pull the latest guide, stubs, and exercises **before you read further**.
+
+Open a terminal in Cursor (**View → Terminal**). Go to the **project root** — the folder that contains `src/` and `docs/` (often named `causal-agent-workshop`):
+
+```bash
+cd causal-agent-workshop   # skip if you are already in the project root
+git pull
+```
+
+You should see files update, or `Already up to date.`
+
+**First time today?** Clone the repo instead (see [README — Clone this repository](../README.md#step-4-clone-this-repository)):
+
+```bash
+git clone https://github.com/dchou-rh/causal-agent-workshop.git
+cd causal-agent-workshop
+```
+
+**`git pull` failed?** Fetch and reset your branch to match the remote (this **discards uncommitted changes** in this repo):
+
+```bash
+git fetch origin
+git reset --hard origin/main
+```
+
+If you already edited files in `src/` or `.cursor/skills/` and want to keep that work, copy those files elsewhere first, reset, then copy them back.
+
+### 2. Run the setup check
+
+From the project root:
+
+```bash
+uv run src/verify.py
+```
+
+**Success looks like:**
+
+```
+GitHub OK: pallets/flask (xxxxx stars)
+Groq OK: ready
+```
+
+Both lines must say `OK`.
+
+Open `src/tools.py`. You will implement the functions marked `NotImplementedError` during Parts 1 and 2.
+
+**Stuck?** See [README troubleshooting](../README.md#troubleshooting).
+
 ---
 
 ## Why causal reasoning?
@@ -93,7 +147,7 @@ Designed for **graduate students and researchers** building or evaluating AI age
 
 No prior Python or terminal experience is required. The [README](../README.md) covers everything you need to get started, including how to use the terminal and run commands. Familiarity with Pearl's ladder, DAGs, or observational causal methods will deepen the discussion; the workshop is self-contained if you are new to agents.
 
-**Before you begin:** Complete setup in the [README](../README.md). You need Cursor, API keys, and a successful run of `verify.py`. If you cloned this repo earlier, [update your local copy](#update-your-local-copy) before the workshop starts.
+**Before you begin:** Complete setup in the [README](../README.md). You need Cursor, API keys, and a successful run of `verify.py`. At the workshop start, run the [setup check](#start-here--setup-check-5-min) (sync files + verify).
 
 ---
 
@@ -112,7 +166,7 @@ A small agent that:
 
 | Time | ADLC phase | What you do |
 |------|------------|-------------|
-| 0:00–0:05 | *(Pre-workshop)* | Run setup check |
+| 0:00–0:05 | *(Pre-workshop)* | [Setup check](#start-here--setup-check-5-min) — sync files + `verify.py` |
 | 0:05–0:13 | **Plan** | Data-intelligence boundary + Cursor Plan mode |
 | 0:13–0:30 | **Build** | Part 1 — `get_repo_health` |
 | 0:30–0:47 | **Build** | Part 2 — `analyze_causal_patterns` |
@@ -158,7 +212,7 @@ This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as
 | **Evaluate** | Compare: Causal vs naive agent | Behavioral comparison + production architecture *(workshop label — not an IBM phase name)* |
 | **Operate & monitor** | Optional appendix (end of guide) | Drift, accountability, compliance — after launch |
 
-**Pre-workshop setup** ([Prepare](#prepare-setup-check-5-min)) is environment verification only — not an ADLC phase.
+**Pre-workshop setup** ([Start here — setup check](#start-here--setup-check-5-min)) is environment verification only — not an ADLC phase.
 
 **Why Evaluate comes after Deploy on the schedule:** Part 3 smoke-tests the agent during **Test**. The **Evaluate** section at the end is the deliberate payoff — side-by-side comparison after you have packaged the skill — so you leave with a clear picture of why tools + rules matter.
 
@@ -175,58 +229,6 @@ In 75 minutes we also touch five ADLC habits you can use on any agent project:
 | **Package for reuse** | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows |
 
 Each section below calls out which ADLC phase you are in and what deliverable you are producing.
-
----
-
-## Prepare: Setup check (5 min)
-
-**Not an ADLC phase** — pre-workshop environment verification. Complete this before **Plan**.
-
-### Update your local copy
-
-If you already have this repo on your machine, pull the latest changes **from the project root** (the folder that contains `src/` and `docs/`):
-
-```bash
-git pull
-```
-
-You should see files update, or `Already up to date.`
-
-**First time here?** Clone the repo instead (see [README — Clone this repository](../README.md#step-4-clone-this-repository)):
-
-```bash
-git clone https://github.com/dchou-rh/causal-agent-workshop.git
-cd causal-agent-workshop
-```
-
-**`git pull` failed?** Your local branch may be behind after a repo update. From the project root:
-
-```bash
-git fetch origin
-git reset --hard origin/main
-```
-
-> **Warning:** `git reset --hard` discards uncommitted changes in this repo. If you started workshop code in `src/` or `.cursor/skills/` and want to keep it, copy those files elsewhere first, pull, then copy them back.
-
-### Run the setup check
-
-From the project root:
-
-```bash
-uv run src/verify.py
-```
-
-**Success looks like:**
-
-```
-GitHub OK: pallets/flask (xxxxx stars)
-Groq OK: ready
-```
-Both lines must say `OK`.
-
-Open `src/tools.py`. You will implement the functions marked `NotImplementedError` during Parts 1 and 2.
-
-**Stuck?** See [README troubleshooting](../README.md#troubleshooting).
 
 ---
 

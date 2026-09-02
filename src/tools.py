@@ -5,11 +5,11 @@ import statistics
 from datetime import datetime, timezone, timedelta
 
 from dotenv import load_dotenv
-from github import Github
+from github import Auth, Github
 
 load_dotenv()
 
-gh = Github(os.environ["GITHUB_TOKEN"])
+gh = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
 
 
 def get_repo_health(owner: str, repo: str) -> dict:

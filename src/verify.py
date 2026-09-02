@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from github import Github
+from github import Auth, Github
 from groq import Groq
 
 from config import get_groq_model
@@ -9,7 +9,7 @@ from config import get_groq_model
 load_dotenv()
 
 # Test GitHub
-gh = Github(os.environ["GITHUB_TOKEN"])
+gh = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
 repo = gh.get_repo("pallets/flask")
 print(f"GitHub OK: {repo.full_name} ({repo.stargazers_count} stars)")
 

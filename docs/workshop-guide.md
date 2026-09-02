@@ -450,7 +450,7 @@ def _classify_trend(weekly: list[int]) -> str:
 ```
 Implement get_repo_health and _classify_trend in src/tools.py for this workshop project.
 
-The file already has imports, load_dotenv(), and gh = Github(os.environ["GITHUB_TOKEN"]). Replace the NotImplementedError stubs only — do not rewrite the whole file.
+The file already has imports, `load_dotenv()`, and `gh = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))`. Replace the `NotImplementedError` stubs only — do not rewrite the whole file.
 
 get_repo_health(owner, repo) must return structured facts only (no opinions, recommendations, or severity labels):
 

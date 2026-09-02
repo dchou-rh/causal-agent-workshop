@@ -62,6 +62,8 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 ---
 
+
+
 ## What this workshop teaches
 
 Many agent demos retrieve a metric and summarize it — users still ask *so what?* This workshop builds **intelligence agents**: tools that return auditable facts with context, plus reasoning rules for plausible *why* and honest confidence. The causal framework — Pearl's ladder, evidence tiers, pathway templates — is developed in [Part 2](#part-2--build-causal-reasoning-17-min) when you implement `analyze_causal_patterns`.
@@ -99,6 +101,8 @@ Agents can fail when they guess without sources, when business context is missin
 
 ---
 
+
+
 ## What you will have at the end
 
 A small agent that:
@@ -109,6 +113,8 @@ A small agent that:
 4. **Packages as a portable Agent Skill** for Cursor and other tools
 
 ---
+
+
 
 ## Schedule at a glance
 
@@ -142,6 +148,8 @@ A small agent that:
 
 
 ---
+
+
 
 ## ADLC: How this workshop is structured
 
@@ -188,6 +196,8 @@ Each section below calls out which ADLC phase you are in and what deliverable yo
 
 ---
 
+
+
 ## Plan: The data-intelligence boundary (8 min)
 
 **ADLC phase: Plan** — define the problem, scope, and success criteria. Practice **Plan mode** in Cursor before any code.
@@ -228,6 +238,8 @@ Here is what we are building. In a real project, you would figure these out your
 
 ---
 
+
+
 ### Try it: Plan in Cursor (~4 min)
 
 **ADLC in practice:** The checklist above is your plan. In Cursor, **[Plan mode](https://cursor.com/docs/agent/plan-mode)** supports the same *idea* — research the codebase, ask clarifying questions, and produce a **reviewable plan** you can edit before any code runs. That is *plan before you prompt* in action.
@@ -243,6 +255,8 @@ Here is what we are building. In a real project, you would figure these out your
 **Do not click Build yet.** The learning goal is to **review the plan** against the data-intelligence boundary. Build switches to Agent mode and starts editing files — save that for [Option B](#option-b-let-cursor-write-it) in Parts 1–3 if you want.
 
 > **Workshop quota:** Plan mode uses one Agent session. In a live session, the facilitator can demo on one screen while the room discusses the plan. Pairs work too: one partner runs Plan mode, the other scores the plan against the table above.
+
+
 
 #### Copy-paste prompt
 
@@ -261,6 +275,8 @@ Read the existing stubs in src/tools.py and the workshop structure in docs/works
 
 Planning only — do not implement or edit files yet.
 ```
+
+
 
 #### Review the plan (2 min)
 
@@ -285,6 +301,8 @@ Either way, the plan is the contract. The code is the implementation.
 
 ---
 
+
+
 ### Live workshop tip (Cursor free tier)
 
 This workshop does **not** require Cursor AI for Parts 1–3. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. The **Plan** section above uses one Plan session (review only — no Build). **Part 4** includes an optional in-chat skill demo (step 5) — reserve one Agent request for that, or skip it and verify your skill with the terminal commands in step 4. If you want to try Option B in Parts 1–3, **pair up**: one partner implements Option A while the other uses Cursor Plan then Build, or swap roles between parts.
@@ -299,6 +317,8 @@ Each part gives you two ways to implement the code:
 You can do both — paste the code first, then read the description and try Option B to see how Cursor's version compares. This is how you learn to evaluate AI-generated code against a known-good reference.
 
 ---
+
+
 
 ## Part 1 · Build: Data tools with context (17 min)
 
@@ -317,6 +337,8 @@ Pick one:
 
 1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`. This gets you running immediately so you can focus on understanding the logic.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it) and copy the prompt into Cursor chat.
+
+
 
 ### Option A: The code
 
@@ -414,6 +436,8 @@ def _classify_trend(weekly: list[int]) -> str:
 
 > **Note:** The first time you call the GitHub stats API for a given repo, it may return empty data while GitHub computes the results. If that happens when you test, wait 5 seconds and try again.
 
+
+
 ### Option B: Let Cursor write it
 
 1. Open `src/tools.py` in Cursor (the skeleton with `NotImplementedError` stubs is already there).
@@ -447,6 +471,8 @@ _classify_trend(weekly) must return one of: insufficient_data (< 8 weeks), accel
 
 Match the existing code style. Do not add new dependencies.
 ```
+
+
 
 ### What that code does (in plain English)
 
@@ -482,6 +508,8 @@ The function should retrieve health metrics for a GitHub repository and return s
 | Otherwise                      | `declining`         |
 
 
+
+
 ### Checkpoint
 
 ```bash
@@ -495,6 +523,8 @@ uv run --directory src python -c "from tools import get_repo_health; import json
 You just defined the **contract** for your data layer. Every consumer of `get_repo_health` — different prompts, different users — gets the same facts. That is how you build agents that scale beyond a single demo. In production, teams call this **data product ownership**: one source of truth, maintained by people who know the domain.
 
 ---
+
+
 
 ## Part 2 · Build: Causal reasoning (17 min)
 
@@ -551,6 +581,8 @@ On rung 1, not all observational claims are equally supported. This workshop use
 | "The decline would not have happened without burnout"            | **No** — implies counterfactual, not in the logs |
 
 
+
+
 ### The methodology — what you will build
 
 Part 2 implements a four-step process the agent will use in Part 3:
@@ -580,6 +612,8 @@ Same choice as Part 1:
 
 1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-1) and copy the prompt into Cursor chat.
+
+
 
 ### Option A: The code
 
@@ -741,6 +775,8 @@ def _get_alternative(pathway_id: str) -> str:
     return alternatives.get(pathway_id, "No alternative identified.")
 ```
 
+
+
 ### Option B: Let Cursor write it
 
 1. Open `src/tools.py` in Cursor (your Part 1 functions should already be in place).
@@ -779,6 +815,8 @@ _get_alternative(pathway_id) must return a competing explanation:
 Use the existing gh client. Match the existing code style. Do not add new dependencies.
 ```
 
+
+
 ### What that code does (in plain English)
 
 If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
@@ -807,6 +845,8 @@ The function returns evidence, not conclusions. It does **not** pick a "winner" 
 
 - Pathway 001: seasonal slowdown (holidays, summer)
 - Pathway 002: intentional stability in a mature project
+
+
 
 ### Evidence tiers (reminder for Part 3)
 
@@ -840,6 +880,9 @@ To support intervention claims, the agent needs evidence from a **change you can
 | **Quasi-experiment (diff-in-diff, matching)** | Repos that joined a foundation vs. matched peers; or a platform policy change with pre/post trends                                         | A tool returning `ate`, `confidence_interval`, and design assumptions (e.g. parallel trends)                          |
 | **Causal ML (DML, causal forests)**           | Thousands of repos with many confounders — estimate effect of adding `CODEOWNERS`, or which profiles benefit from a release cadence change | Fitted model in a tool returning `ate` or `cate_by_segment`, `method`, and assumptions — not a plain predictive score |
 
+> **Diff-in-diff (footnote):** Compare how much the outcome *changed* in a treated group vs. a control group over the same period. Mental model: `(after − before)_treated − (after − before)_control` — an estimate of the intervention effect if both groups would have trended in parallel without the action.
+
+> **Causal ML (footnote):** Traditional ML: given repo **features** (stars, contributors, etc.), **predict** outcome *Y*. Causal ML: given a study **design** (experiment, diff-in-diff, matching) *and* features, **estimate the effect of action *X* on outcome *Y*** — Pearl's **do(X) on Y**: what happens if we *do* something, not just what co-occurs. ML flexes the math; the design keeps the answer causal.
 
 The agent should still **label the evidence tier** and refuse intervention language unless a tool returns an **identified estimate** (classical or ML-backed) — not pathway pattern match alone.
 
@@ -871,6 +914,8 @@ The agent should still **name the assumptions** behind any counterfactual. Refus
 
 ---
 
+
+
 ## Part 3 · Test: Wire tools to Groq (13 min)
 
 **ADLC phase: Test** — connect tools to the LLM, run the agent loop, and smoke-test behavior.
@@ -893,6 +938,8 @@ Same choice as Parts 1 and 2:
 
 1. **Option A: Copy the code** — Paste the full working file below.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-2) and copy the prompt into Cursor chat.
+
+
 
 ### Option A: The code
 
@@ -1065,6 +1112,8 @@ if __name__ == "__main__":
     print(run_naive_agent(query))
 ```
 
+
+
 ### Option B: Let Cursor write it
 
 1. In Cursor's file explorer, right-click the `src/` folder → **New File** → name it `agent.py` (the file can be empty).
@@ -1117,6 +1166,8 @@ if __name__ == "__main__":
 Match patterns used elsewhere in this project. Do not add new dependencies.
 ```
 
+
+
 ### What that code does (in plain English)
 
 If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
@@ -1147,12 +1198,16 @@ uv run src/agent.py
 - Causal agent output cites real metrics with context
 - Naive agent often invents or guesses numbers — **that is the typical contrast** (re-run if your model happens to know the repo from pretraining)
 
+
+
 ### Try other repos
 
 ```bash
 uv run src/agent.py "Analyze the health of facebook/react"
 uv run src/agent.py "Should I contribute to psf/requests?"
 ```
+
+
 
 ### ADLC test note
 
@@ -1161,6 +1216,8 @@ You just **smoke-tested** the agent loop — tool calls fire, metrics come back 
 Your pipeline mirrors a staged production design: `get_repo_health` (retrieve facts) → `analyze_causal_patterns` (structured evidence) → LLM (narrative only after data is in hand).
 
 ---
+
+
 
 ## Part 4 · Deploy: Package as an Agent Skill (8 min)
 
@@ -1182,7 +1239,11 @@ Windows PowerShell:
 New-Item -ItemType Directory -Force -Path .cursor/skills/repo-health-analyst/scripts
 ```
 
+
+
 ### Step-by-step
+
+
 
 #### 1. Create `SKILL.md`
 
@@ -1501,19 +1562,29 @@ causal-agent-workshop/
 Open the terminal in Cursor from the **project root**, then run these **one at a time**:
 
 ```bash
+
+```
+
+
+
 # Verify setup
+
 uv run src/verify.py
 
 # After completing Parts 1–2 — test health metrics
+
 uv run --directory src python -c "from tools import get_repo_health; import json; print(json.dumps(get_repo_health('pallets','flask'), indent=2, default=str))"
 
 # After completing Part 3 — run the causal agent
+
 uv run src/agent.py
 uv run src/agent.py "Analyze the health of facebook/react"
 
 # After completing Part 4 — run skill scripts
+
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
+
 ```
 
 ### The five rules
@@ -1540,3 +1611,5 @@ Target behavior for the causal agent (enforce via prompts and evaluation, not Py
 ## License
 
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+```
+

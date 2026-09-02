@@ -64,53 +64,9 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 
 
-## Why causal reasoning?
+## What this workshop teaches
 
-Many agent demos emphasize retrieval: pull a metric, summarize it, call it intelligence. In practice, that often leaves users with the same question they started with — *so what?*
-
-Effective decision-support agents are built around a simple idea: users need three things — not one:
-
-
-| Question               | What users actually need                                          |
-| ---------------------- | ----------------------------------------------------------------- |
-| **What happened?**     | Accurate data                                                     |
-| **Why did it happen?** | Causal context — plausible mechanisms, not just correlated trends |
-| **What happens next?** | Grounded judgment a human can act on                              |
-
-
-That framing — *not what happened, but why it happened and what happens next* — is why this workshop goes beyond wiring an LLM to an API.
-
-### Pearl's ladder — why "why" is not one question
-
-Computer scientist **Judea Pearl** (*[The Book of Why](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)*) formalized a core problem in analytics: models can **predict** well yet **explain** poorly. Causal questions live on a **ladder of causation** with three rungs, each requiring strictly stronger assumptions and data:
-
-
-| Rung                  | Question type                                           | Formal move                             | What it requires                                                                                                                                  | Example                                                         |
-| --------------------- | ------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| **1. Association**    | What co-occurs in the data?                             | See P(Y given X)                        | Observational data only — correlation, trends, co-movement                                                                                        | "Ice cream sales and drowning deaths both rise in summer"       |
-| **2. Intervention**   | What if we *do* X?                                      | Estimate P(Y given do(X))               | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?"                  |
-| **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen                                   | "Would this patient have recovered if they had taken the drug?" |
-
-
-Pearl's ladder makes a sharp distinction: association is not causation. **Many analytics workflows — and many LLM answers — stay on rung 1.** They narrate co-occurrence as if it were mechanism. Sound causal practice asks *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Default agents often skip both unless you **engineer** the data and reasoning layers.
-
-This workshop does not implement `do`-calculus or fit SCMs. It teaches you to **place claims on the ladder honestly** — and to build tools that return evidence at a known tier instead of letting the LLM imply rung 3 from rung 1 data.
-
-### What this workshop adds to Pearl's ladder
-
-Pearl's rungs classify the **type** of question. In [Part 2](#part-2--build-causal-reasoning-17-min) you will add a practical **evidence tier** rubric (Tiers 1–4) for how strongly an agent *could* justify a claim. **This workshop implements Tiers 1–2 in code**; Tiers 3–4 are described for completeness but are not produced by `tools.py` unless you extend it. Tiers 1–2 remain on the **association rung**; Tiers 3–4 would add peer comparison and population-level tests — still not intervention or counterfactual proof without experiments.
-
-
-| Design choice                   | Causal-inference analogue                                     | What you build                               |
-| ------------------------------- | ------------------------------------------------------------- | -------------------------------------------- |
-| Contextualized metrics (Part 1) | Historical baselines add context (not confounding adjustment) | z-scores vs self-history, not raw counts     |
-| Pathway templates (Part 2)      | Mechanism hypotheses (DAG-style stories, not formal graphs)   | `CAUSAL_PATHWAYS` as domain templates        |
-| `alternative_explanation`       | Reporting competing explanations                              | Every pathway returns a rival story          |
-| Evidence tiers in the prompt    | Epistemic humility about identification                       | Prompt should require tier labels, not proof |
-| Naive agent (Part 3)            | Unidentified causal narration                                 | Confident prose with no instruments          |
-
-
-
+Many agent demos retrieve a metric and summarize it — users still ask *so what?* This workshop builds **intelligence agents**: tools that return auditable facts with context, plus reasoning rules for plausible *why* and honest confidence. The causal framework — Pearl's ladder, evidence tiers, pathway templates — is developed in [Part 2](#part-2--build-causal-reasoning-17-min) when you implement `analyze_causal_patterns`.
 
 ### How this differs from traditional machine learning
 
@@ -585,9 +541,23 @@ In observational settings (GitHub timelines, issue trackers, contributor stats),
 
 Agents make this worse by default: LLMs are fluent at **post hoc stories**. Your job in Part 2 is to constrain that fluency with **structured hypotheses** (pathways), **competing explanations**, and **explicit tiers** — so the model reasons *over* evidence instead of inventing mechanism.
 
-### Pearl's ladder — three kinds of causal questions (review)
+### Pearl's ladder — why "why" is not one question
 
-You saw Pearl's three rungs in [Why causal reasoning?](#pearls-ladder--why-why-is-not-one-question). Here is how they map to this lab:
+Computer scientist **Judea Pearl** (*[The Book of Why](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)*) formalized a core problem in analytics: models can **predict** well yet **explain** poorly. Causal questions live on a **ladder of causation** with three rungs, each requiring strictly stronger assumptions and data:
+
+
+| Rung                  | Question type                                           | Formal move                             | What it requires                                                                                                                                  | Example                                                         |
+| --------------------- | ------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **1. Association**    | What co-occurs in the data?                             | See P(Y given X)                        | Observational data only — correlation, trends, co-movement                                                                                        | "Ice cream sales and drowning deaths both rise in summer"       |
+| **2. Intervention**   | What if we *do* X?                                      | Estimate P(Y given do(X))               | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?"                  |
+| **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen                                   | "Would this patient have recovered if they had taken the drug?" |
+
+
+Pearl's ladder makes a sharp distinction: association is not causation. **Many analytics workflows — and many LLM answers — stay on rung 1.** They narrate co-occurrence as if it were mechanism. Sound causal practice asks *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Default agents often skip both unless you **engineer** the data and reasoning layers.
+
+This workshop does not implement `do`-calculus or fit SCMs. It teaches you to **place claims on the ladder honestly** — and to build tools that return evidence at a known tier instead of letting the LLM imply rung 3 from rung 1 data.
+
+Here is how the rungs map to this lab:
 
 
 | Rung                  | Question type                                              | Example                                               | What it requires                                                               | Can this workshop's agent answer it?                         |
@@ -600,6 +570,19 @@ You saw Pearl's three rungs in [Why causal reasoning?](#pearls-ladder--why-why-i
 The same lesson applies here: many analytics workflows — and many LLM answers — stay on rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the mechanism and identification strategy behind the template.
 
 **For seminar discussion:** Your `CAUSAL_PATHWAYS` entries are **hypothesized mechanisms** — subgraphs of a larger DAG. Which edges would you need to condition on (backdoor paths) to interpret a pathway match as supportive of X → Y? What would an **instrument** look like in open-source health (if anything)?
+
+### What you build on Pearl's ladder
+
+Pearl's rungs classify the **type** of question. This part adds a practical **evidence tier** rubric (Tiers 1–4) for how strongly an agent *could* justify a claim. **This workshop implements Tiers 1–2 in code**; Tiers 3–4 are described for completeness but are not produced by `tools.py` unless you extend it.
+
+
+| Design choice                   | Causal-inference analogue                                     | What you build                               |
+| ------------------------------- | ------------------------------------------------------------- | -------------------------------------------- |
+| Contextualized metrics (Part 1) | Historical baselines add context (not confounding adjustment) | z-scores vs self-history, not raw counts     |
+| Pathway templates (Part 2)      | Mechanism hypotheses (DAG-style stories, not formal graphs)   | `CAUSAL_PATHWAYS` as domain templates        |
+| `alternative_explanation`       | Reporting competing explanations                              | Every pathway returns a rival story          |
+| Evidence tiers in the prompt    | Epistemic humility about identification                       | Prompt should require tier labels, not proof |
+| Naive agent (Part 3)            | Unidentified causal narration                                 | Confident prose with no instruments          |
 
 ### Evidence tiers — how strong is the claim?
 
@@ -1271,40 +1254,45 @@ flags — the agent provides interpretation and judgment.
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health <owner> <repo>
 ```
 
-2. If any indicator flags are concerning (`is_declining`, `has_bus_factor_risk`,
-   `has_issue_backlog`), run the causal analysis:
+1. If any indicator flags are concerning (`is_declining`, `has_bus_factor_risk`,
+  `has_issue_backlog`), run the causal analysis:
 
 ```bash
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal <owner> <repo>
 ```
 
-3. Synthesize the results following these rules:
+1. Synthesize the results following these rules:
 
 ### Rules for Interpretation
 
 - **Never present a number without its reference context.** "47 commits" is
-  banned. "47 commits/week (z = -1.2 vs. 52-week self-history)" is required.
+banned. "47 commits/week (z = -1.2 vs. 52-week self-history)" is required.
 - **Every causal claim states its evidence tier:**
   - Tier 1 (temporal): "Following X, we observed Y..."
   - Tier 2 (pattern): "This matches a pattern seen in similar projects..."
   - Tier 3 (peer comparison): "Peer projects without X didn't show Y..."
   - Tier 4 (statistical): "Across N projects, X predicts Y (p < 0.05)..."
 - **Every causal claim acknowledges an alternative explanation.** The tool
-  returns one — include it.
+returns one — include it.
 - **Data functions return facts. You provide judgment.** The tool says
-  `is_declining: true`. You decide whether that matters and why.
+`is_declining: true`. You decide whether that matters and why.
 - **Structure output as a narrative briefing**, not a bullet-point data dump.
 
 ## Output Format
 
 Present findings as a narrative briefing with these sections:
+
 1. **Overview** — Repository identity, stars, activity level
 2. **Health Assessment** — Metrics with reference context
 3. **Causal Analysis** — Pathway matches with evidence tiers and alternatives
 4. **Assessment** — Your synthesis based on all evidence
+
 ```
 
 The `description` field is how Cursor decides when to activate your skill — write it carefully. You can edit the wording later; this version matches the tools you built in Parts 1–2.
+```
+
+
 
 #### 2. Copy `src/tools.py` to the skill
 
@@ -1451,13 +1439,13 @@ That three-question check is your evaluation harness — the simplest form of ag
 What you built today maps to a production stack — same layers, different packaging:
 
 
-| Layer                              | What you built                     | Production equivalent                                         |
-| ---------------------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| Data intelligence                  | `tools.py`                         | Shared library or service — facts, flags, evidence tiers only |
-| Live data / tools                  | `agent.py` `TOOLS` + dispatch      | MCP server, API gateway, or host-native function calling      |
-| Knowledge retrieval *(optional)*   | — *(not in this workshop)*         | RAG — vector search over docs, playbooks, policies            |
-| Orchestration                      | Groq loop + `SYSTEM_PROMPT`        | Agent runtime — routing, guardrails, memory, fallbacks        |
-| Deploy                             | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing)         |
+| Layer                            | What you built                     | Production equivalent                                         |
+| -------------------------------- | ---------------------------------- | ------------------------------------------------------------- |
+| Data intelligence                | `tools.py`                         | Shared library or service — facts, flags, evidence tiers only |
+| Live data / tools                | `agent.py` `TOOLS` + dispatch      | MCP server, API gateway, or host-native function calling      |
+| Knowledge retrieval *(optional)* | — *(not in this workshop)*         | RAG — vector search over docs, playbooks, policies            |
+| Orchestration                    | Groq loop + `SYSTEM_PROMPT`        | Agent runtime — routing, guardrails, memory, fallbacks        |
+| Deploy                           | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing)         |
 
 
 **Agent runtime** — the orchestration row above. In Part 3, that is your `run_agent` loop: it calls the Groq API each turn, reads tool-call requests from the model, runs your Python functions, and appends results back into the conversation until the model returns a final answer. In production, the runtime is the same idea at larger scale — often a service or framework (LangGraph, custom Python, Cursor's agent host) that:

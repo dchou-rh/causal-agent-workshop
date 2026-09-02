@@ -535,94 +535,70 @@ You just defined the **contract** for your data layer. Every consumer of `get_re
 
 ### Why correlation is not enough
 
-Part 1 tells you *what* is happening. Causal reasoning asks *why* — and requires honesty about **which rung of Pearl's ladder** your evidence supports.
+Part 1 tells you *what* is happening. Part 2 asks *why* — but only from **observational** data: GitHub timelines, issue counts, contributor stats. You did not run an experiment, so two things moving together is **association**, not proof that one caused the other.
 
-In this workshop, your data is **observational** — GitHub timelines, issue trackers, contributor counts. You see what changed over time, but you did not run an experiment. That means you almost always have **association** data: X and Y moved together, not proof that X caused Y.
+**Confounding** is the usual trap: another explanation fits the same pattern. Commits fall while a maintainer steps back — or during a holiday quarter, a platform outage, or a shift in project scope. Without ruling out those alternatives, even a convincing story is **unidentified** — co-occurring events, not evidence of cause and effect.
 
-**Confounding** is the usual problem. A drop in commits might line up with a maintainer stepping back — or with a holiday quarter, a platform outage, or a shift in project scope. Same chart, different stories. Without a design or model that addresses those alternatives, a compelling narrative is still **unidentified**: you have not shown a causal link, only a pattern that fits more than one explanation. (In causal-inference terms, the same numbers can match multiple **DAGs** — different diagrams of what might cause what.)
+LLMs make this worse by narrating fluent *why* stories from thin evidence. Part 2 constrains that with **structured hypotheses** (pathways), **competing explanations**, and **evidence tiers** — so the model reasons over what the tools return instead of inventing mechanism.
 
-Agents make this worse by default: LLMs are fluent at **post hoc stories**. Your job in Part 2 is to constrain that fluency with **structured hypotheses** (pathways), **competing explanations**, and **explicit tiers** — so the model reasons *over* evidence instead of inventing mechanism.
+### Pearl's ladder — three types of "why" questions
 
-### Pearl's ladder — why "why" is not one question
-
-Computer scientist **Judea Pearl** (*[The Book of Why](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)*) formalized a core problem in analytics: models can **predict** well yet **explain** poorly. Causal questions live on a **ladder of causation** with three rungs, each requiring strictly stronger assumptions and data:
+**Judea Pearl** (*[The Book of Why](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)*) separates three question types. Each rung needs stronger assumptions than the last:
 
 
-| Rung                  | Question type                                           | Formal move                             | What it requires                                                                                                                                  | Example                                                         |
-| --------------------- | ------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| **1. Association**    | What co-occurs in the data?                             | See P(Y given X)                        | Observational data only — correlation, trends, co-movement                                                                                        | "Ice cream sales and drowning deaths both rise in summer"       |
-| **2. Intervention**   | What if we *do* X?                                      | Estimate P(Y given do(X))               | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?"                  |
-| **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen                                   | "Would this patient have recovered if they had taken the drug?" |
+| Rung                  | Question              | Example                                                         | This workshop                                                |
+| --------------------- | --------------------- | --------------------------------------------------------------- | ------------------------------------------------------------ |
+| **1. Association**    | What co-occurs?       | "Ice cream sales and drowning deaths both rise in summer"       | **Yes** — Parts 1–2 use observational GitHub data only       |
+| **2. Intervention**   | What if we *do* X?    | "If we run the ad campaign, will sales go up?"                  | **No** — needs experiments or special study designs          |
+| **3. Counterfactual** | What if X had differed? | "Would this patient have recovered if they had taken the drug?" | **No** — needs a full structural model of cause and effect |
 
 
-Pearl's ladder makes a sharp distinction: association is not causation. **Many analytics workflows — and many LLM answers — stay on rung 1.** They narrate co-occurrence as if it were mechanism. Sound causal practice asks *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Default agents often skip both unless you **engineer** the data and reasoning layers.
-
-This workshop does not implement `do`-calculus or fit SCMs. It teaches you to **place claims on the ladder honestly** — and to build tools that return evidence at a known tier instead of letting the LLM imply rung 3 from rung 1 data.
-
-Here is how the rungs map to this lab:
-
-
-| Rung                  | Question type                                              | Example                                               | What it requires                                                               | Can this workshop's agent answer it?                         |
-| --------------------- | ---------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| **1. Association**    | What do we observe together?                               | "Smokers have higher lung cancer rates"               | Observational data only                                                        | **Yes** — Parts 1–2 report co-occurring metrics and patterns |
-| **2. Intervention**   | What if we *act*?                                          | "Does a smoking-cessation program reduce risk?"       | Experiment, quasi-experiment, or identified estimand (Pearl's **do** operator) | **No** — needs design beyond GitHub logs                     |
-| **3. Counterfactual** | What if things had been different — *why* did this happen? | "Would she have gotten sick if she had never smoked?" | SCM or DAG of mechanisms + untestable assumptions                              | **No** — needs structural model, not correlation             |
-
-
-The same lesson applies here: many analytics workflows — and many LLM answers — stay on rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the mechanism and identification strategy behind the template.
-
-**For seminar discussion:** Your `CAUSAL_PATHWAYS` entries are **hypothesized mechanisms** — subgraphs of a larger DAG. Which edges would you need to condition on (backdoor paths) to interpret a pathway match as supportive of X → Y? What would an **instrument** look like in open-source health (if anything)?
-
-### What you build on Pearl's ladder
-
-Pearl's rungs classify the **type** of question. This part adds a practical **evidence tier** rubric (Tiers 1–4) for how strongly an agent *could* justify a claim. **This workshop implements Tiers 1–2 in code**; Tiers 3–4 are described for completeness but are not produced by `tools.py` unless you extend it.
-
-
-| Design choice                   | Causal-inference analogue                                     | What you build                               |
-| ------------------------------- | ------------------------------------------------------------- | -------------------------------------------- |
-| Contextualized metrics (Part 1) | Historical baselines add context (not confounding adjustment) | z-scores vs self-history, not raw counts     |
-| Pathway templates (Part 2)      | Mechanism hypotheses (DAG-style stories, not formal graphs)   | `CAUSAL_PATHWAYS` as domain templates        |
-| `alternative_explanation`       | Reporting competing explanations                              | Every pathway returns a rival story          |
-| Evidence tiers in the prompt    | Epistemic humility about identification                       | Prompt should require tier labels, not proof |
-| Naive agent (Part 3)            | Unidentified causal narration                                 | Confident prose with no instruments          |
+GitHub logs keep you on **rung 1**.
 
 ### Evidence tiers — how strong is the claim?
 
-Pearl's ladder classifies the *type* of question. This workshop adds a practical rubric for *how much* an agent can justify from **observational GitHub data**:
+On rung 1, not all observational claims are equally supported. This workshop uses four **evidence tiers** — a rubric for how much an agent can justify from GitHub data alone:
 
 
-| Tier | Strength          | What it takes                                        | How to phrase it                                |
-| ---- | ----------------- | ---------------------------------------------------- | ----------------------------------------------- |
-| 1    | Temporal sequence | A before B in the data                               | "Following X, we observed Y..."                 |
-| 2    | Pattern match     | Multiple signals fit a known causal pathway template | "This matches a known pattern..."               |
-| 3    | Peer comparison   | Similar cases without X don't show Y                 | "Peer projects without X didn't show Y..."      |
-| 4    | Statistical test  | Tested across many cases                             | "Across N projects, X predicts Y (p < 0.05)..." |
+| Tier | Strength          | How to phrase it                                |
+| ---- | ----------------- | ----------------------------------------------- |
+| 1    | Temporal sequence | "Following X, we observed Y..."                 |
+| 2    | Pattern match     | "This matches a known pattern..."               |
+| 3    | Peer comparison   | "Peer projects without X didn't show Y..."      |
+| 4    | Statistical test  | "Across N projects, X predicts Y (p < 0.05)..." |
+
+**Higher tier = stronger evidence.** Tier 1 is the weakest (sequence alone); Tier 4 is the strongest (tested across many cases). None of these tiers prove causation on their own — they rank how much observational support an agent can claim.
+
+> **Workshop scope:** `analyze_causal_patterns` returns **Tier 2** evidence only. Tiers 3–4 are in the rubric so the agent can narrate honestly — do not claim Tier 3 or 4 unless you build tools that produce peer comparisons or statistical tests.
+
+| If the agent says…                                               | Honest at this tier?                           |
+| ---------------------------------------------------------------- | ---------------------------------------------- |
+| "Following maintainer inactivity, we observed declining commits" | Yes — Tier 1                                   |
+| "This matches a maintainer-departure cascade pattern"            | Yes — Tier 2                                   |
+| "Adding a maintainer would restore velocity"                     | **No** — implies intervention, not in the logs |
+| "The decline would not have happened without burnout"            | **No** — implies counterfactual, not in the logs |
+
+### The methodology — what you will build
+
+Part 2 implements a four-step process the agent will use in Part 3:
+
+1. **Hypothesize** — Define **pathway templates** in `CAUSAL_PATHWAYS`: plain-English stories of how decline might happen (e.g. maintainer leaves → fewer contributors).
+2. **Match** — `analyze_causal_patterns` checks whether repo data fits signals in each template. This is **pattern matching**, not proof.
+3. **Compete** — Every match returns an `alternative_explanation` — another story that could explain the same signals.
+4. **Label** — Return the evidence tier (Tier 2) so the LLM states how strong the claim is.
+
+That is **abductive** reasoning: the best-fitting story under constraints — not causal identification. A seasonal slowdown could fit the same signals as a maintainer departure; the alternative and tier make that uncertainty explicit.
 
 
-> **Workshop scope:** `analyze_causal_patterns` returns **Tier 2** evidence only. Tiers 3–4 are part of the rubric for honest narration — do not let the LLM claim Tier 3 or 4 unless you build tools that produce peer comparisons or statistical tests.
+| What you build                  | Role in the process                          |
+| ------------------------------- | -------------------------------------------- |
+| `CAUSAL_PATHWAYS` (Part 2)      | Hypothesized mechanism templates             |
+| `analyze_causal_patterns`       | Pattern match against live GitHub data       |
+| `alternative_explanation`       | Competing story for every pathway            |
+| Evidence tier in tool output      | Explicit strength label for the LLM to cite |
+| Contextualized metrics (Part 1) | Facts with baselines — inputs to matching    |
 
-**Tiers 1–2 stay on Pearl's association rung** — observational evidence only. Tiers 3–4 would add comparative or population-level rigor (closer to **external validity** and **statistical confirmation**, still not `do(X)`). Interventions and true counterfactuals need experiments, instruments, or SCMs this workshop does not build — but your agent should **not pretend** it has them.
-
-
-| If the agent says…                                               | Implied rung               | Honest?                                        |
-| ---------------------------------------------------------------- | -------------------------- | ---------------------------------------------- |
-| "Following maintainer inactivity, we observed declining commits" | 1 (association)            | Yes, at Tier 1                                 |
-| "This matches a maintainer-departure cascade pattern"            | 1 (structured association) | Yes, at Tier 2                                 |
-| "Adding a maintainer would restore velocity"                     | 2 (intervention)           | **No** — not identified from GitHub logs alone |
-| "The decline would not have happened without burnout"            | 3 (counterfactual)         | **No** — needs SCM + untestable assumptions    |
-
-
-
-
-### What "pattern matching" means here
-
-In Part 2 you define **causal pathways** — plain-English stories of how maintainer attrition or release gaps might lead to decline. Think of each pathway as a **mechanism template** (a story you could draw as a DAG, but this workshop does not formalize one). `analyze_causal_patterns` does not *prove* those stories. It **pattern-matches**: it checks whether real repo data lines up with a **subset of nodes** you can proxy from GitHub (e.g. top contributor inactive *and* contributor count fell).
-
-That is **Tier 2** evidence — structured association on rung 1, not proof. The pathway may be a plausible explanation, or a seasonal slowdown could fit the same signals. That is why every pathway returns an `alternative_explanation` and the system prompt should require reporting the tier honestly — the agent is doing **abductive** reasoning (best story fit), not **causal identification**.
-
-**This workshop operates at pattern matching (Tier 2).** The goal is responsible *why* reasoning under real constraints: explicit mechanisms, alternatives, and ladder placement — not causal certainty or policy prescriptions from observational GitHub data alone.
-
-**Extension (post-workshop):** To climb Pearl's rungs in production, you would add interventional data (A/B tests on maintainer programs), quasi-experiments (repos that gained/lost maintainers exogenously), or formal SCMs with sensitivity analysis. The architecture you build today — facts in tools, tiers in prompts — scales to those richer sources without changing the data-intelligence boundary.
+**Extension (post-workshop):** Stronger claims need stronger data — experiments, peer benchmarks, or formal causal models. The architecture you build today (facts in tools, tiers and alternatives in output) scales to those sources without changing the data-intelligence boundary.
 
 ### Two ways to implement
 

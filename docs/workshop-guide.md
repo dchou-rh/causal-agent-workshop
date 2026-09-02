@@ -598,7 +598,7 @@ That is **abductive** reasoning: the best-fitting story under constraints — no
 | Evidence tier in tool output      | Explicit strength label for the LLM to cite |
 | Contextualized metrics (Part 1) | Facts with baselines — inputs to matching    |
 
-**Extension (post-workshop):** Stronger claims need stronger data — experiments, peer benchmarks, or formal causal models. The architecture you build today (facts in tools, tiers and alternatives in output) scales to those sources without changing the data-intelligence boundary.
+**Extension:** See [Beyond rung 1](#beyond-rung-1--discussion) at the end of Part 2 for how you would build toward intervention and counterfactual claims.
 
 ### Two ways to implement
 
@@ -857,6 +857,45 @@ uv run --directory src python -c "from tools import analyze_causal_patterns; imp
 ### ADLC build note
 
 You are **building guardrails into the data layer** — alternatives and evidence tiers are not optional niceties. They prevent overconfident agents.
+
+### Beyond rung 1 — discussion
+
+This workshop stays on Pearl's **association rung** — observational GitHub data, pattern matching, Tier 2 evidence. Rungs 2 and 3 need different **data**, **design**, and **tools**, but the same architecture: facts in `tools.py`, strength labels and alternatives in the output, judgment in the LLM.
+
+**Rung 2 — Intervention ("What if we *do* X?")**
+
+To support intervention claims, the agent needs evidence from a **change you can attribute to an action**, not just co-occurrence. Classical study designs and **causal ML** methods both belong in the tool layer — fitted offline or via a service, with results returned as structured facts:
+
+| Approach | Example in open-source health | What you might add |
+| -------- | ----------------------------- | ------------------ |
+| **Randomized experiment** | Assign repos to a maintainer-onboarding program; compare outcomes | A tool that reads experiment assignment + pre/post metrics |
+| **Natural experiment** | A maintainer returns after a long absence; compare activity before vs. after | Event-study or before/after tool with a clear intervention date |
+| **Quasi-experiment (diff-in-diff, matching)** | Repos that joined a foundation vs. matched peers; or a platform policy change with pre/post trends | A tool returning `ate`, `confidence_interval`, and design assumptions (e.g. parallel trends) |
+| **Causal ML (DML, causal forests)** | Thousands of repos with many confounders — estimate effect of adding `CODEOWNERS`, or which profiles benefit from a release cadence change | Fitted model in a tool returning `ate` or `cate_by_segment`, `method`, and assumptions — not a plain predictive score |
+
+The agent should still **label the evidence tier** and refuse intervention language unless a tool returns an **identified estimate** (classical or ML-backed) — not pathway pattern match alone.
+
+**Rung 3 — Counterfactual ("What if X had been different?")**
+
+To support counterfactual claims, the agent needs a **modeled answer about a world that did not happen** — with assumptions explicit. Simple scenarios and **ML-based counterfactual methods** use the same pattern: the tool returns numbers and assumptions; the LLM explains them. At the formal end, a **structural causal model (SCM)** is often drawn as a **DAG** (directed acyclic graph) of mechanisms; Pearl's **do-calculus** is the machinery for asking interventional questions from a fully specified graph — powerful, but beyond what this workshop builds.
+
+| Approach | Example in open-source health | What you might add |
+| -------- | ----------------------------- | ------------------ |
+| **Historical baseline scenario** | When the top maintainer was last active, commits averaged 12/week; now 4/week — gap if activity had stayed at the prior level | A tool returning `observed`, `baseline`, `gap`, and `assumption` |
+| **Matched-repo comparison** | A similar project without maintainer loss kept velocity flat while this repo dropped | A cohort tool comparing trajectories — partial counterfactual ("what happened where X did not occur") |
+| **Synthetic control** | One repo loses a maintainer; build a counterfactual path from weighted peer repos that did not | A tool returning `observed_vs_synthetic`, `donor_weights`, and `assumptions` |
+| **Structural model (SCM / DAG)** | Pathway 001 as a **DAG**: maintainer activity → review latency → contributors → commits; estimate links, then query hypotheticals (the graph makes assumptions visible) | A tool that takes a hypothetical input (e.g. maintainer active) and returns a **predicted outcome range** plus stated graph assumptions |
+
+The agent should still **name the assumptions** behind any counterfactual. Refuse claims like "commits would have stayed flat if the maintainer had not left" unless a tool returns a **counterfactual estimate with its assumption set** — not pathway match or narrative alone.
+
+**What stays the same**
+
+| Workshop today | Rungs 2–3 in production |
+| -------------- | ------------------------- |
+| `tools.py` returns facts, not opinions | New tools for experiments, cohorts, or fitted causal estimates |
+| Evidence tiers label strength | Tier 3–4 tools back stronger tiers |
+| `alternative_explanation` on every pathway | Competing models or assumptions, not just competing stories |
+| LLM synthesizes; Python does not judge | Same data-intelligence boundary |
 
 ---
 

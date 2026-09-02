@@ -537,7 +537,9 @@ You just defined the **contract** for your data layer. Every consumer of `get_re
 
 Part 1 tells you *what* is happening. Causal reasoning asks *why* — and requires honesty about **which rung of Pearl's ladder** your evidence supports.
 
-In observational settings (GitHub timelines, issue trackers, contributor stats), you almost always have **association** data. Confounding is routine: a repo's commit drop might track a maintainer's absence, a holiday quarter, a platform outage, or a shift in project scope. Without a design or model that addresses confounding, a compelling narrative is still **unidentified** — the same statistical pattern fits multiple DAGs.
+In this workshop, your data is **observational** — GitHub timelines, issue trackers, contributor counts. You see what changed over time, but you did not run an experiment. That means you almost always have **association** data: X and Y moved together, not proof that X caused Y.
+
+**Confounding** is the usual problem. A drop in commits might line up with a maintainer stepping back — or with a holiday quarter, a platform outage, or a shift in project scope. Same chart, different stories. Without a design or model that addresses those alternatives, a compelling narrative is still **unidentified**: you have not shown a causal link, only a pattern that fits more than one explanation. (In causal-inference terms, the same numbers can match multiple **DAGs** — different diagrams of what might cause what.)
 
 Agents make this worse by default: LLMs are fluent at **post hoc stories**. Your job in Part 2 is to constrain that fluency with **structured hypotheses** (pathways), **competing explanations**, and **explicit tiers** — so the model reasons *over* evidence instead of inventing mechanism.
 

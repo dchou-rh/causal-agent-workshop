@@ -513,7 +513,7 @@ LLMs will narrate a *why* anyway — fluently, from thin evidence. Part 2 does n
 
 ### Pearl's ladder — three types of "why" questions
 
-**Judea Pearl** (*[The Book of Why](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)*) separates three question types. Each rung needs stronger assumptions than the last:
+**Judea Pearl** (*[The Book of Why](https://en.wikipedia.org/wiki/The_Book_of_Why)*) separates three question types. Each rung needs stronger assumptions than the last:
 
 
 | Rung                  | Question                | Example                                                         | This workshop                                              |

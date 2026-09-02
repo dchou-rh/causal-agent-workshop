@@ -130,7 +130,7 @@ A small agent that:
 | 1:08–1:15 | **Evaluate**     | Compare causal vs naive agent + production architecture close-out        |
 
 
-**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip Part 4 step 5 (in-chat skill demo) or the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
+**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
 
 ### Quick reference
 
@@ -305,7 +305,7 @@ Either way, the plan is the contract. The code is the implementation.
 
 ### Live workshop tip (Cursor free tier)
 
-This workshop does **not** require Cursor AI for Parts 1–3. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. The **Plan** section above uses one Plan session (review only — no Build). **Part 4** includes an optional in-chat skill demo (step 5) — reserve one Agent request for that, or skip it and verify your skill with the terminal commands in step 4. If you want to try Option B in Parts 1–3, **pair up**: one partner implements Option A while the other uses Cursor Plan then Build, or swap roles between parts.
+This workshop does **not** require Cursor AI for Parts 1–3. For live sessions, **default to Option A** (copy the code) so everyone finishes on time without burning limited Agent requests. The **Plan** section above uses one Plan session (review only — no Build). **Part 4** uses one Agent request to test your skill in chat — reserve it for that step. If you want to try Option B in Parts 1–3, **pair up**: one partner implements Option A while the other uses Cursor Plan then Build, or swap roles between parts.
 
 ### How Parts 1–3 work
 
@@ -1225,7 +1225,7 @@ Your pipeline mirrors a staged production design: `get_repo_health` (retrieve fa
 
 Deployment connects your tools and reasoning rules to the environment where people actually work — not just proving the prototype runs. Packaging an [Agent Skill](https://agentskills.io) ships capability and rules together (`SKILL.md` + `scripts/tools.py`), decoupled from the core agent prompt — the same modular pattern production teams use for skills-based agents.
 
-**Time tip:** Steps 1–4 fit the 8-minute block. Step 5 (in-chat demo) is optional — skip it if you are behind; terminal validation in step 4 is enough.
+**Time tip:** Steps 1–3 set up the skill. Step 4 tests it in Cursor chat (uses one Agent request).
 
 ### Folder structure
 
@@ -1358,22 +1358,15 @@ if __name__ == "__main__":
     print(json.dumps(result, indent=2, default=str))
 ```
 
-#### 4. Test the scripts
+#### 4. Test in Cursor (uses one Agent request)
 
-```bash
-uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
-uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
-```
-
-#### 5. Test in Cursor (uses one Agent request)
-
-This step is how you confirm the skill works *inside* Cursor — chat is what activates it. Open chat (**Cmd+L** / **Ctrl+L**) and ask:
+Open chat (**Cmd+L** / **Ctrl+L**) and ask:
 
 > Analyze the health of pallets/flask
 
-Cursor **may** load your skill, run your scripts, and follow your rules — if it does not, confirm the skill path and `description` in `SKILL.md`, or rely on the terminal tests in step 4.
+This is how you confirm the skill works *inside* Cursor — chat activates it. Cursor **may** load your skill, run your scripts, and follow your rules. If it does not, confirm the skill path and `description` in `SKILL.md`.
 
-**No chat quota left?** You already validated the skill in step 4 via the terminal. You can skip this step and still count Part 4 complete — you just will not see Cursor route through `SKILL.md` automatically.
+**No chat quota left?** Part 4 is still complete once `SKILL.md` and `scripts/tools.py` are in place — you packaged the skill even if you could not demo it in chat.
 
 ### What you packaged
 
@@ -1580,10 +1573,9 @@ uv run --directory src python -c "from tools import get_repo_health; import json
 uv run src/agent.py
 uv run src/agent.py "Analyze the health of facebook/react"
 
-# After completing Part 4 — run skill scripts
-
-uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
-uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
+# After completing Part 4 — optional: run skill scripts from terminal
+# uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
+# uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
 
 ```
 

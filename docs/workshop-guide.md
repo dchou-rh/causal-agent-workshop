@@ -1555,28 +1555,19 @@ causal-agent-workshop/
 Open the terminal in Cursor from the **project root**, then run these **one at a time**:
 
 ```bash
-
-```
-
-
-
 # Verify setup
-
 uv run src/verify.py
 
 # After completing Parts 1–2 — test health metrics
-
 uv run --directory src python -c "from tools import get_repo_health; import json; print(json.dumps(get_repo_health('pallets','flask'), indent=2, default=str))"
 
 # After completing Part 3 — run the causal agent
-
 uv run src/agent.py
 uv run src/agent.py "Analyze the health of facebook/react"
 
 # After completing Part 4 — optional: run skill scripts from terminal
 # uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
 # uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
-
 ```
 
 ### The five rules

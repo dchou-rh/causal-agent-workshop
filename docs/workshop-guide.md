@@ -1451,12 +1451,13 @@ That three-question check is your evaluation harness — the simplest form of ag
 What you built today maps to a production stack — same layers, different packaging:
 
 
-| Layer                   | What you built                     | Production equivalent                                         |
-| ----------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| Data intelligence       | `tools.py`                         | Shared library or service — facts, flags, evidence tiers only |
-| Tool-call / integration | `agent.py` `TOOLS` + dispatch      | MCP server, API gateway, or host-native function calling      |
-| Orchestration           | Groq loop + `SYSTEM_PROMPT`        | Agent runtime — routing, guardrails, memory, fallbacks        |
-| Deploy                  | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing)         |
+| Layer                              | What you built                     | Production equivalent                                         |
+| ---------------------------------- | ---------------------------------- | ------------------------------------------------------------- |
+| Data intelligence                  | `tools.py`                         | Shared library or service — facts, flags, evidence tiers only |
+| Live data / tools                  | `agent.py` `TOOLS` + dispatch      | MCP server, API gateway, or host-native function calling      |
+| Knowledge retrieval *(optional)*   | — *(not in this workshop)*         | RAG — vector search over docs, playbooks, policies            |
+| Orchestration                      | Groq loop + `SYSTEM_PROMPT`        | Agent runtime — routing, guardrails, memory, fallbacks        |
+| Deploy                             | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing)         |
 
 
 **Agent runtime** — the orchestration row above. In Part 3, that is your `run_agent` loop: it calls the Groq API each turn, reads tool-call requests from the model, runs your Python functions, and appends results back into the conversation until the model returns a final answer. In production, the runtime is the same idea at larger scale — often a service or framework (LangGraph, custom Python, Cursor's agent host) that:
@@ -1468,11 +1469,13 @@ What you built today maps to a production stack — same layers, different packa
 
 The runtime is the **conductor**, not the musician: it does not host model weights, and it is not your data layer (`tools.py`) or tool server (MCP). Token cost and latency are tracked here because this is where inference calls originate.
 
-**MCP (Model Context Protocol)** — you may have heard this term. It standardizes how AI hosts (Cursor, Claude Desktop, internal platforms) discover and call external tools. In *this* architecture, MCP fits best at the **tool-call layer**: one server exposing `get_repo_health` and `analyze_causal_patterns` so every host shares the same governed API, auth, and audit trail. MCP does **not** replace what you learned today:
+**MCP (Model Context Protocol)** — standardizes how AI hosts (Cursor, Claude Desktop, internal platforms) discover and call external tools. It fits the **live data / tools** row: one server exposing `get_repo_health` and `analyze_causal_patterns` so every host shares the same governed API, auth, and audit trail. MCP does **not** replace what you learned today:
 
 - The **data-intelligence boundary** still lives in your Python return shapes (no opinions in tools, evidence tiers in causal output).
 - **Orchestration** still needs an agent loop, system prompt, and routing rules ("call health first, then causal if flags fire").
 - **Skills** and MCP are complementary — a Skill carries *how to interpret* results; MCP carries *how to invoke* the tools.
+
+**RAG vs Skills** — both can add context to the prompt, but they solve different problems. **Skills** (Part 4) package curated **capability + rules** — when to activate, which scripts to run, how to interpret output. **RAG** searches a **large or fast-changing doc corpus** per query (policies, wikis, past reports). Use RAG when that knowledge is too big or dynamic to maintain in `SKILL.md`; use Skills when you need a versioned workflow with executable tools. RAG **complements** live API tools — it does not replace `tools.py` or evidence tiers; retrieved text can still be associative.
 
 **Other production essentials** (beyond what fits in 75 minutes):
 
@@ -1505,7 +1508,7 @@ ADLC does not end at deploy. Operate-and-monitor practices track latency, task c
 
 ### What you would add for production (operate & monitor)
 
-See [Step 4 — From workshop to production](#step-4--from-workshop-to-production-2-min) for the production architecture overview (layers, MCP, monitoring, access control). This optional section goes deeper on ongoing discipline:
+See [Step 4 — From workshop to production](#step-4--from-workshop-to-production-2-min) for the production architecture overview (layers, MCP, RAG, monitoring, access control). This optional section goes deeper on ongoing discipline:
 
 - **Drift** — re-check when APIs, prompts, or model versions change
 - **Accountability** — data owners maintain tool logic; users own decisions based on agent output

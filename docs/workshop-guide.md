@@ -8,7 +8,7 @@ A 75-minute hands-on workshop on building agents that reason about data — not 
 
 ## Start here — setup check (5 min)
 
-**Not an ADLC phase** — environment verification before **Plan**. If you already completed the [pre-workshop setup](../README.md), run through this **at the start of the workshop** so you have the latest files and a working environment.
+If you already completed the [pre-workshop setup](../README.md), run through this **at the start of the workshop** so you have the latest files and a working environment.
 
 ### 1. Sync the latest files
 
@@ -30,7 +30,7 @@ git clone https://github.com/dchou-rh/causal-agent-workshop.git
 cd causal-agent-workshop
 ```
 
-**`git pull` failed?** Fetch and reset your branch to match the remote (this **discards uncommitted changes** in this repo):
+`git pull` **failed?** Fetch and reset your branch to match the remote (this **discards uncommitted changes** in this repo):
 
 ```bash
 git fetch origin
@@ -62,29 +62,35 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 ---
 
+
+
 ## Why causal reasoning?
 
 Many agent demos emphasize retrieval: pull a metric, summarize it, call it intelligence. In practice, that often leaves users with the same question they started with — *so what?*
 
 Effective decision-support agents are built around a simple idea: users need three things — not one:
 
-| Question | What users actually need |
-|----------|--------------------------|
-| **What happened?** | Accurate data |
+
+| Question               | What users actually need                                          |
+| ---------------------- | ----------------------------------------------------------------- |
+| **What happened?**     | Accurate data                                                     |
 | **Why did it happen?** | Causal context — plausible mechanisms, not just correlated trends |
-| **What happens next?** | Grounded judgment a human can act on |
+| **What happens next?** | Grounded judgment a human can act on                              |
+
 
 That framing — *not what happened, but why it happened and what happens next* — is why this workshop goes beyond wiring an LLM to an API.
 
 ### Pearl's ladder — why "why" is not one question
 
-Computer scientist **Judea Pearl** ([*The Book of Why*](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)) formalized a core problem in analytics: models can **predict** well yet **explain** poorly. Causal questions live on a **ladder of causation** with three rungs, each requiring strictly stronger assumptions and data:
+Computer scientist **Judea Pearl** (*[The Book of Why](https://yalebooks.yale.edu/book/9780465097609/the-book-of-why/)*) formalized a core problem in analytics: models can **predict** well yet **explain** poorly. Causal questions live on a **ladder of causation** with three rungs, each requiring strictly stronger assumptions and data:
 
-| Rung | Question type | Formal move | What it requires | Example |
-|------|---------------|-------------|------------------|---------|
-| **1. Association** | What co-occurs in the data? | See P(Y given X) | Observational data only — correlation, trends, co-movement | "Ice cream sales and drowning deaths both rise in summer" |
-| **2. Intervention** | What if we *do* X? | Estimate P(Y given do(X)) | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?" |
-| **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen | "Would this patient have recovered if they had taken the drug?" |
+
+| Rung                  | Question type                                           | Formal move                             | What it requires                                                                                                                                  | Example                                                         |
+| --------------------- | ------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **1. Association**    | What co-occurs in the data?                             | See P(Y given X)                        | Observational data only — correlation, trends, co-movement                                                                                        | "Ice cream sales and drowning deaths both rise in summer"       |
+| **2. Intervention**   | What if we *do* X?                                      | Estimate P(Y given do(X))               | Randomized experiment, natural experiment, or **identified** estimand from observational data (backdoor adjustment, instrumental variables, etc.) | "If we run the ad campaign, will sales go up?"                  |
+| **3. Counterfactual** | What if X had been different, *given what we observed*? | Compare worlds under a structural model | **Structural causal model** (SCM) or equivalent — a DAG of mechanisms — to ask about worlds that did not happen                                   | "Would this patient have recovered if they had taken the drug?" |
+
 
 Pearl's ladder makes a sharp distinction: association is not causation. **Many analytics workflows — and many LLM answers — stay on rung 1.** They narrate co-occurrence as if it were mechanism. Sound causal practice asks *identification* questions ("what must be true for this estimand to be causal?") before *estimation* questions ("what is the effect size?"). Default agents often skip both unless you **engineer** the data and reasoning layers.
 
@@ -94,26 +100,32 @@ This workshop does not implement `do`-calculus or fit SCMs. It teaches you to **
 
 Pearl's rungs classify the **type** of question. In [Part 2](#part-2--build-causal-reasoning-17-min) you will add a practical **evidence tier** rubric (Tiers 1–4) for how strongly an agent *could* justify a claim. **This workshop implements Tiers 1–2 in code**; Tiers 3–4 are described for completeness but are not produced by `tools.py` unless you extend it. Tiers 1–2 remain on the **association rung**; Tiers 3–4 would add peer comparison and population-level tests — still not intervention or counterfactual proof without experiments.
 
-| Design choice | Causal-inference analogue | What you build |
-|---------------|---------------------------|----------------|
-| Contextualized metrics (Part 1) | Historical baselines add context (not confounding adjustment) | z-scores vs self-history, not raw counts |
-| Pathway templates (Part 2) | Mechanism hypotheses (DAG-style stories, not formal graphs) | `CAUSAL_PATHWAYS` as domain templates |
-| `alternative_explanation` | Reporting competing explanations | Every pathway returns a rival story |
-| Evidence tiers in the prompt | Epistemic humility about identification | Prompt should require tier labels, not proof |
-| Naive agent (Part 3) | Unidentified causal narration | Confident prose with no instruments |
+
+| Design choice                   | Causal-inference analogue                                     | What you build                               |
+| ------------------------------- | ------------------------------------------------------------- | -------------------------------------------- |
+| Contextualized metrics (Part 1) | Historical baselines add context (not confounding adjustment) | z-scores vs self-history, not raw counts     |
+| Pathway templates (Part 2)      | Mechanism hypotheses (DAG-style stories, not formal graphs)   | `CAUSAL_PATHWAYS` as domain templates        |
+| `alternative_explanation`       | Reporting competing explanations                              | Every pathway returns a rival story          |
+| Evidence tiers in the prompt    | Epistemic humility about identification                       | Prompt should require tier labels, not proof |
+| Naive agent (Part 3)            | Unidentified causal narration                                 | Confident prose with no instruments          |
+
+
+
 
 ### How this differs from traditional machine learning
 
 Traditional ML is built to **predict** — given inputs, produce a score or label trained on historical examples. That works well when you have lots of labeled data, a stable problem, and users who only need the prediction itself.
 
-| | Traditional ML | This workshop's approach |
-|---|---|---|
-| **Primary output** | A score or class ("73% churn risk") | Structured facts + narrative reasoning |
-| **Training** | Collect data, engineer features, train, validate, deploy | No model training — you write tools and prompts |
-| **"Why?"** | Often opaque; explainability is a separate project | Designed in: baselines, pathways, evidence tiers, alternatives |
-| **Causation** | Usually learns correlation; true causality needs extra methods and data | Explicit causal templates + honest confidence labels |
-| **Adaptability** | New questions often mean new features or retraining | Same tools; the LLM adapts answers to the user's question |
-| **Best at** | High-volume pattern matching at scale | Interactive analysis where context and explanation matter |
+
+|                    | Traditional ML                                                          | This workshop's approach                                       |
+| ------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Primary output** | A score or class ("73% churn risk")                                     | Structured facts + narrative reasoning                         |
+| **Training**       | Collect data, engineer features, train, validate, deploy                | No model training — you write tools and prompts                |
+| **"Why?"**         | Often opaque; explainability is a separate project                      | Designed in: baselines, pathways, evidence tiers, alternatives |
+| **Causation**      | Usually learns correlation; true causality needs extra methods and data | Explicit causal templates + honest confidence labels           |
+| **Adaptability**   | New questions often mean new features or retraining                     | Same tools; the LLM adapts answers to the user's question      |
+| **Best at**        | High-volume pattern matching at scale                                   | Interactive analysis where context and explanation matter      |
+
 
 Neither replaces the other. Production systems often use **both**: ML for scoring at scale, agents for interpretation, investigation, and communication. The mistake is treating a general-purpose LLM chatbot as a substitute for either — it has no **domain-specific fitted model** for your data and no structured evidence layer unless you build one.
 
@@ -124,18 +136,16 @@ This workshop focuses on that missing layer: **tools that return auditable facts
 These patterns show up when an agent must support real decisions. They are design choices, not laws — illustrated here and in Red Hat's [enterprise data agent](https://www.redhat.com/en/blog/we-built-enterprise-data-agent-and-you-can-too) write-up:
 
 1. **Metrics without baselines are noise.** A number only becomes a signal when it is compared to something — history, peers, or expected range. Agents that quote raw counts feel confident and mislead.
-
 2. **Correlation is not an explanation.** Two trends moving together does not mean one caused the other. Useful agents separate *what we observe* from *why we think it happened* — and label how strong that evidence is.
-
 3. **Facts and judgment should stay separate.** Structured data functions should return indicator flags and reference context, not recommendations. The LLM interprets for the user's situation; if opinions are baked into the data layer, the same tool breaks for every role.
-
 4. **Overconfidence is worse than uncertainty.** Strong agents acknowledge alternative explanations and state evidence tier — especially when reasoning from patterns rather than controlled experiments.
-
 5. **The data-intelligence boundary scales.** One well-designed tool layer can serve many prompts, personas, and workflows. The intelligence layer adapts; the data layer stays auditable.
 
 Agents can fail when they guess without sources, when business context is missing, and when data and judgment are mixed. Production teams address that with a **data foundation** (one source of truth per domain), a **guidance architecture** (routing rules and documentation the LLM consults before answering), a **staged pipeline** (retrieve → narrow → reason → return, with each step logged), and **skills-based packaging** (capabilities and rules as modular documents the agent loads on demand). Trust, accountability, and inherited access control matter as much as model choice.
 
 ---
+
+
 
 ## What you will have at the end
 
@@ -148,34 +158,42 @@ A small agent that:
 
 ---
 
+
+
 ## Schedule at a glance
 
-| Time | ADLC phase | What you do |
-|------|------------|-------------|
+
+| Time      | ADLC phase       | What you do                                                              |
+| --------- | ---------------- | ------------------------------------------------------------------------ |
 | 0:00–0:05 | *(Pre-workshop)* | [Setup check](#start-here--setup-check-5-min) — sync files + `verify.py` |
-| 0:05–0:13 | **Plan** | Data-intelligence boundary + Cursor Plan mode |
-| 0:13–0:30 | **Build** | Part 1 — `get_repo_health` |
-| 0:30–0:47 | **Build** | Part 2 — `analyze_causal_patterns` |
-| 0:47–1:00 | **Test** | Part 3 — wire tools to Groq; smoke-test the agent |
-| 1:00–1:08 | **Deploy** | Part 4 — package as an Agent Skill |
-| 1:08–1:15 | **Evaluate** | Compare causal vs naive agent + production architecture close-out |
+| 0:05–0:13 | **Plan**         | Data-intelligence boundary + Cursor Plan mode                            |
+| 0:13–0:30 | **Build**        | Part 1 — `get_repo_health`                                               |
+| 0:30–0:47 | **Build**        | Part 2 — `analyze_causal_patterns`                                       |
+| 0:47–1:00 | **Test**         | Part 3 — wire tools to Groq; smoke-test the agent                        |
+| 1:00–1:08 | **Deploy**       | Part 4 — package as an Agent Skill                                       |
+| 1:08–1:15 | **Evaluate**     | Compare causal vs naive agent + production architecture close-out        |
+
 
 **Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip Part 4 step 5 (in-chat skill demo) or the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
 
 ### Quick reference
 
-| ADLC phase | Part | File | What you build |
-|------------|------|------|----------------|
-| *(Pre-workshop)* | Setup | `src/verify.py` | Confirm GitHub + Groq access |
-| **Plan** | — | — | Problem scope, data-intelligence boundary, Cursor plan |
-| **Build** | 1 | `src/tools.py` | `get_repo_health` with contextual benchmarks |
-| **Build** | 2 | `src/tools.py` | `analyze_causal_patterns` causal reasoning layer |
-| **Test** | 3 | `src/agent.py` | Full Groq agent with function calling |
-| **Deploy** | 4 | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill |
-| **Evaluate** | — | — | Causal vs naive comparison + production close-out |
-| **Operate & monitor** *(optional)* | — | — | Ongoing discipline after launch — see appendix |
+
+| ADLC phase                         | Part  | File                                  | What you build                                         |
+| ---------------------------------- | ----- | ------------------------------------- | ------------------------------------------------------ |
+| *(Pre-workshop)*                   | Setup | `src/verify.py`                       | Confirm GitHub + Groq access                           |
+| **Plan**                           | —     | —                                     | Problem scope, data-intelligence boundary, Cursor plan |
+| **Build**                          | 1     | `src/tools.py`                        | `get_repo_health` with contextual benchmarks           |
+| **Build**                          | 2     | `src/tools.py`                        | `analyze_causal_patterns` causal reasoning layer       |
+| **Test**                           | 3     | `src/agent.py`                        | Full Groq agent with function calling                  |
+| **Deploy**                         | 4     | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill                                   |
+| **Evaluate**                       | —     | —                                     | Causal vs naive comparison + production close-out      |
+| **Operate & monitor** *(optional)* | —     | —                                     | Ongoing discipline after launch — see appendix         |
+
 
 ---
+
+
 
 ## ADLC: How this workshop is structured
 
@@ -189,14 +207,16 @@ Traditional software (**SDLC**) is deterministic: the same input yields the same
 
 This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as the wrap-up. **Operate & monitor** is optional reading after the session.
 
-| IBM ADLC phase | Workshop section | What you produce |
-|----------------|------------------|------------------|
-| **Plan** | Plan: The data-intelligence boundary | Problem scope, success criteria, Cursor plan |
-| **Build** | Part 1 + Part 2 | `tools.py` — facts, flags, causal evidence |
-| **Test** | Part 3 | `agent.py` — agent loop wired and smoke-tested |
-| **Deploy** | Part 4 | Agent Skill (`SKILL.md` + scripts) |
-| **Evaluate** | Compare: Causal vs naive agent | Behavioral comparison + production architecture *(workshop label — not an IBM phase name)* |
-| **Operate & monitor** | Optional appendix (end of guide) | Drift, accountability, compliance — after launch |
+
+| IBM ADLC phase        | Workshop section                     | What you produce                                                                           |
+| --------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **Plan**              | Plan: The data-intelligence boundary | Problem scope, success criteria, Cursor plan                                               |
+| **Build**             | Part 1 + Part 2                      | `tools.py` — facts, flags, causal evidence                                                 |
+| **Test**              | Part 3                               | `agent.py` — agent loop wired and smoke-tested                                             |
+| **Deploy**            | Part 4                               | Agent Skill (`SKILL.md` + scripts)                                                         |
+| **Evaluate**          | Compare: Causal vs naive agent       | Behavioral comparison + production architecture *(workshop label — not an IBM phase name)* |
+| **Operate & monitor** | Optional appendix (end of guide)     | Drift, accountability, compliance — after launch                                           |
+
 
 **Pre-workshop setup** ([Start here — setup check](#start-here--setup-check-5-min)) is environment verification only — not an ADLC phase.
 
@@ -206,17 +226,21 @@ This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as
 
 In 75 minutes we also touch five ADLC habits you can use on any agent project:
 
-| ADLC habit | What it means here |
-|------------|-------------------|
-| **Plan before you prompt** | Align on the problem, success criteria, and data sources — use Cursor Plan mode |
-| **Separate data from judgment** | Python returns facts; the LLM interprets them (tools + orchestration, not prompt-only) |
-| **Build guardrails in** | System prompts, tool boundaries, evidence tiers — designed in up front, not bolted on after demos break |
-| **Evaluate, don't just demo** | Compare causal vs naive agents; production teams add benchmarks and regression tests |
-| **Package for reuse** | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows |
+
+| ADLC habit                      | What it means here                                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Plan before you prompt**      | Align on the problem, success criteria, and data sources — use Cursor Plan mode                         |
+| **Separate data from judgment** | Python returns facts; the LLM interprets them (tools + orchestration, not prompt-only)                  |
+| **Build guardrails in**         | System prompts, tool boundaries, evidence tiers — designed in up front, not bolted on after demos break |
+| **Evaluate, don't just demo**   | Compare causal vs naive agents; production teams add benchmarks and regression tests                    |
+| **Package for reuse**           | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows            |
+
 
 Each section below calls out which ADLC phase you are in and what deliverable you are producing.
 
 ---
+
+
 
 ## Plan: The data-intelligence boundary (8 min)
 
@@ -234,12 +258,14 @@ You will build the workshop version of that enterprise split: `tools.py` for aud
 
 ### Where to draw the line
 
-| Data layer (your Python code) | Intelligence layer (the LLM) |
-|---|---|
-| Numbers, flags, z-scores | What those numbers mean for the user |
-| Historical benchmarks | Whether a deviation matters given relevant context |
-| Causal pathway evidence | Which explanation best fits the evidence |
-| Methodology notes ("Tier 2 pattern match") | Narrative synthesis |
+
+| Data layer (your Python code)              | Intelligence layer (the LLM)                       |
+| ------------------------------------------ | -------------------------------------------------- |
+| Numbers, flags, z-scores                   | What those numbers mean for the user               |
+| Historical benchmarks                      | Whether a deviation matters given relevant context |
+| Causal pathway evidence                    | Which explanation best fits the evidence           |
+| Methodology notes ("Tier 2 pattern match") | Narrative synthesis                                |
+
 
 **Think about it:** Look at the right column. What is the LLM using to make each of those judgments? What happens to the agent's output if the left column is missing, wrong, or incomplete?
 
@@ -256,14 +282,16 @@ Here is what we are building. In a real project, you would figure these out your
 
 ---
 
+
+
 ### Try it: Plan in Cursor (~4 min)
 
-**ADLC in practice:** The checklist above is your plan. In Cursor, [**Plan mode**](https://cursor.com/docs/agent/plan-mode) supports the same *idea* — research the codebase, ask clarifying questions, and produce a **reviewable plan** you can edit before any code runs. That is *plan before you prompt* in action.
+**ADLC in practice:** The checklist above is your plan. In Cursor, **[Plan mode](https://cursor.com/docs/agent/plan-mode)** supports the same *idea* — research the codebase, ask clarifying questions, and produce a **reviewable plan** you can edit before any code runs. That is *plan before you prompt* in action.
 
 #### Steps
 
-1. Open Cursor chat (**`Cmd+L`** / **`Ctrl+L`**).
-2. Press **`Shift+Tab`** from the chat input (or use the **mode picker**) until the mode shows **Plan**.
+1. Open Cursor chat (`Cmd+L` / `Ctrl+L`).
+2. Press `Shift+Tab` from the chat input (or use the **mode picker**) until the mode shows **Plan**.
 3. Copy the prompt below, paste it into chat, and press **Enter**.
 4. Answer any clarifying questions Cursor asks (pick sensible defaults if you are unsure).
 5. When the plan appears, read it — especially which work belongs in `tools.py` vs. the LLM.
@@ -271,6 +299,8 @@ Here is what we are building. In a real project, you would figure these out your
 **Do not click Build yet.** The learning goal is to **review the plan** against the data-intelligence boundary. Build switches to Agent mode and starts editing files — save that for [Option B](#option-b-let-cursor-write-it) in Parts 1–3 if you want.
 
 > **Workshop quota:** Plan mode uses one Agent session. In a live session, the facilitator can demo on one screen while the room discusses the plan. Pairs work too: one partner runs Plan mode, the other scores the plan against the table above.
+
+
 
 #### Copy-paste prompt
 
@@ -290,6 +320,8 @@ Read the existing stubs in src/tools.py and the workshop structure in docs/works
 Planning only — do not implement or edit files yet.
 ```
 
+
+
 #### Review the plan (2 min)
 
 With the plan open, check as a group (or with your partner):
@@ -302,14 +334,18 @@ Optional: click **Save to workspace** on the plan file so you can reference it d
 
 #### Connect to the rest of the workshop
 
-| Path | What you do |
-|------|-------------|
-| **Default (Option A)** | Copy the working code from this guide in Parts 1–3 — compare your mental model to the plan you just reviewed |
-| **Option B** | Return to your plan in Parts 1–3 and click **Build** on the relevant steps, or start a fresh Plan for each part — then diff Cursor's output against Option A |
+
+| Path                   | What you do                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Default (Option A)** | Copy the working code from this guide in Parts 1–3 — compare your mental model to the plan you just reviewed                                                 |
+| **Option B**           | Return to your plan in Parts 1–3 and click **Build** on the relevant steps, or start a fresh Plan for each part — then diff Cursor's output against Option A |
+
 
 Either way, the plan is the contract. The code is the implementation.
 
 ---
+
+
 
 ### Live workshop tip (Cursor free tier)
 
@@ -325,6 +361,8 @@ Each part gives you two ways to implement the code:
 You can do both — paste the code first, then read the description and try Option B to see how Cursor's version compares. This is how you learn to evaluate AI-generated code against a known-good reference.
 
 ---
+
+
 
 ## Part 1 · Build: Data tools with context (17 min)
 
@@ -343,6 +381,8 @@ Pick one:
 
 1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`. This gets you running immediately so you can focus on understanding the logic.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it) and copy the prompt into Cursor chat.
+
+
 
 ### Option A: The code
 
@@ -440,6 +480,8 @@ def _classify_trend(weekly: list[int]) -> str:
 
 > **Note:** The first time you call the GitHub stats API for a given repo, it may return empty data while GitHub computes the results. If that happens when you test, wait 5 seconds and try again.
 
+
+
 ### Option B: Let Cursor write it
 
 1. Open `src/tools.py` in Cursor (the skeleton with `NotImplementedError` stubs is already there).
@@ -474,6 +516,8 @@ _classify_trend(weekly) must return one of: insufficient_data (< 8 weeks), accel
 Match the existing code style. Do not add new dependencies.
 ```
 
+
+
 ### What that code does (in plain English)
 
 If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
@@ -481,33 +525,34 @@ If you chose Option A, read through this to understand what you pasted. If you c
 The function should retrieve health metrics for a GitHub repository and return structured data with indicator flags. It should not return opinions, recommendations, or severity labels.
 
 1. **Fetch the repository** using the GitHub client and record the current UTC time.
-
 2. **Get weekly commit counts** from GitHub's commit activity stats. This returns up to 52 weeks of data.
-
 3. **Compute recent vs. historical activity.** Average the last 4 weeks (`recent_avg`), average all weeks (`hist_mean`), and compute a z-score: `(recent_avg - hist_mean) / hist_stdev`. The z-score tells you how unusual recent activity is compared to this repo's own history. A z-score of -1.5 means "noticeably below normal for this project." Use a standard deviation floor of `1.0` if fewer than 2 weeks of data.
-
 4. **Measure contributor concentration ("bus factor").** Get all contributors and calculate `top_contributor_share` — what fraction of total commits came from the single busiest contributor.
-
 5. **Check issue health for the last 90 days.** Fetch all issues, exclude pull requests, count open vs. closed, and compute a `close_ratio`.
-
 6. **Return a dictionary of facts only — no opinions.** The return value includes: `repository`, `stars`, `forks`, nested `metrics` (commit activity, contributor concentration, issue health), boolean `indicator_flags`, and a `retrieved_at` timestamp. The indicator flags are booleans, not subjective labels like "unhealthy" or "concerning":
 
-| Flag | True when... |
-|------|------------|
-| `is_active` | Recent weekly average > 0 |
-| `is_declining` | z-score < -1.0 |
-| `has_bus_factor_risk` | Top contributor share > 50% |
-| `has_issue_backlog` | More open than closed issues |
 
-**`_classify_trend(weekly)`** classifies the commit trend by splitting the weekly list in half and comparing the averages:
+| Flag                  | True when...                 |
+| --------------------- | ---------------------------- |
+| `is_active`           | Recent weekly average > 0    |
+| `is_declining`        | z-score < -1.0               |
+| `has_bus_factor_risk` | Top contributor share > 50%  |
+| `has_issue_backlog`   | More open than closed issues |
 
-| Condition | Label |
-|-----------|-------|
-| Fewer than 8 weeks | `insufficient_data` |
-| Second half / first half > 1.2 | `accelerating` |
-| Ratio > 0.9 | `stable` |
-| Ratio > 0.6 | `slowing` |
-| Otherwise | `declining` |
+
+`_classify_trend(weekly)` classifies the commit trend by splitting the weekly list in half and comparing the averages:
+
+
+| Condition                      | Label               |
+| ------------------------------ | ------------------- |
+| Fewer than 8 weeks             | `insufficient_data` |
+| Second half / first half > 1.2 | `accelerating`      |
+| Ratio > 0.9                    | `stable`            |
+| Ratio > 0.6                    | `slowing`           |
+| Otherwise                      | `declining`         |
+
+
+
 
 ### Checkpoint
 
@@ -522,6 +567,8 @@ uv run --directory src python -c "from tools import get_repo_health; import json
 You just defined the **contract** for your data layer. Every consumer of `get_repo_health` — different prompts, different users — gets the same facts. That is how you build agents that scale beyond a single demo. In production, teams call this **data product ownership**: one source of truth, maintained by people who know the domain.
 
 ---
+
+
 
 ## Part 2 · Build: Causal reasoning (17 min)
 
@@ -542,11 +589,13 @@ Agents make this worse by default: LLMs are fluent at **post hoc stories**. Your
 
 You saw Pearl's three rungs in [Why causal reasoning?](#pearls-ladder--why-why-is-not-one-question). Here is how they map to this lab:
 
-| Rung | Question type | Example | What it requires | Can this workshop's agent answer it? |
-|------|---------------|---------|------------------|--------------------------------------|
-| **1. Association** | What do we observe together? | "Smokers have higher lung cancer rates" | Observational data only | **Yes** — Parts 1–2 report co-occurring metrics and patterns |
-| **2. Intervention** | What if we *act*? | "Does a smoking-cessation program reduce risk?" | Experiment, quasi-experiment, or identified estimand (Pearl's **do** operator) | **No** — needs design beyond GitHub logs |
-| **3. Counterfactual** | What if things had been different — *why* did this happen? | "Would she have gotten sick if she had never smoked?" | SCM or DAG of mechanisms + untestable assumptions | **No** — needs structural model, not correlation |
+
+| Rung                  | Question type                                              | Example                                               | What it requires                                                               | Can this workshop's agent answer it?                         |
+| --------------------- | ---------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **1. Association**    | What do we observe together?                               | "Smokers have higher lung cancer rates"               | Observational data only                                                        | **Yes** — Parts 1–2 report co-occurring metrics and patterns |
+| **2. Intervention**   | What if we *act*?                                          | "Does a smoking-cessation program reduce risk?"       | Experiment, quasi-experiment, or identified estimand (Pearl's **do** operator) | **No** — needs design beyond GitHub logs                     |
+| **3. Counterfactual** | What if things had been different — *why* did this happen? | "Would she have gotten sick if she had never smoked?" | SCM or DAG of mechanisms + untestable assumptions                              | **No** — needs structural model, not correlation             |
+
 
 The same lesson applies here: many analytics workflows — and many LLM answers — stay on rung 1. They describe co-occurrence and present it as explanation. **Pattern matching on a pathway template is still rung 1** unless you have validated the mechanism and identification strategy behind the template.
 
@@ -556,23 +605,29 @@ The same lesson applies here: many analytics workflows — and many LLM answers 
 
 Pearl's ladder classifies the *type* of question. This workshop adds a practical rubric for *how much* an agent can justify from **observational GitHub data**:
 
-| Tier | Strength | What it takes | How to phrase it |
-|------|----------|---------------|------------------|
-| 1 | Temporal sequence | A before B in the data | "Following X, we observed Y..." |
-| 2 | Pattern match | Multiple signals fit a known causal pathway template | "This matches a known pattern..." |
-| 3 | Peer comparison | Similar cases without X don't show Y | "Peer projects without X didn't show Y..." |
-| 4 | Statistical test | Tested across many cases | "Across N projects, X predicts Y (p < 0.05)..." |
+
+| Tier | Strength          | What it takes                                        | How to phrase it                                |
+| ---- | ----------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| 1    | Temporal sequence | A before B in the data                               | "Following X, we observed Y..."                 |
+| 2    | Pattern match     | Multiple signals fit a known causal pathway template | "This matches a known pattern..."               |
+| 3    | Peer comparison   | Similar cases without X don't show Y                 | "Peer projects without X didn't show Y..."      |
+| 4    | Statistical test  | Tested across many cases                             | "Across N projects, X predicts Y (p < 0.05)..." |
+
 
 > **Workshop scope:** `analyze_causal_patterns` returns **Tier 2** evidence only. Tiers 3–4 are part of the rubric for honest narration — do not let the LLM claim Tier 3 or 4 unless you build tools that produce peer comparisons or statistical tests.
 
 **Tiers 1–2 stay on Pearl's association rung** — observational evidence only. Tiers 3–4 would add comparative or population-level rigor (closer to **external validity** and **statistical confirmation**, still not `do(X)`). Interventions and true counterfactuals need experiments, instruments, or SCMs this workshop does not build — but your agent should **not pretend** it has them.
 
-| If the agent says… | Implied rung | Honest? |
-|--------------------|--------------|---------|
-| "Following maintainer inactivity, we observed declining commits" | 1 (association) | Yes, at Tier 1 |
-| "This matches a maintainer-departure cascade pattern" | 1 (structured association) | Yes, at Tier 2 |
-| "Adding a maintainer would restore velocity" | 2 (intervention) | **No** — not identified from GitHub logs alone |
-| "The decline would not have happened without burnout" | 3 (counterfactual) | **No** — needs SCM + untestable assumptions |
+
+| If the agent says…                                               | Implied rung               | Honest?                                        |
+| ---------------------------------------------------------------- | -------------------------- | ---------------------------------------------- |
+| "Following maintainer inactivity, we observed declining commits" | 1 (association)            | Yes, at Tier 1                                 |
+| "This matches a maintainer-departure cascade pattern"            | 1 (structured association) | Yes, at Tier 2                                 |
+| "Adding a maintainer would restore velocity"                     | 2 (intervention)           | **No** — not identified from GitHub logs alone |
+| "The decline would not have happened without burnout"            | 3 (counterfactual)         | **No** — needs SCM + untestable assumptions    |
+
+
+
 
 ### What "pattern matching" means here
 
@@ -590,6 +645,8 @@ Same choice as Part 1:
 
 1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-1) and copy the prompt into Cursor chat.
+
+
 
 ### Option A: The code
 
@@ -751,6 +808,8 @@ def _get_alternative(pathway_id: str) -> str:
     return alternatives.get(pathway_id, "No alternative identified.")
 ```
 
+
+
 ### Option B: Let Cursor write it
 
 1. Open `src/tools.py` in Cursor (your Part 1 functions should already be in place).
@@ -789,32 +848,38 @@ _get_alternative(pathway_id) must return a competing explanation:
 Use the existing gh client. Match the existing code style. Do not add new dependencies.
 ```
 
+
+
 ### What that code does (in plain English)
 
 If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
 
-**`CAUSAL_PATHWAYS`** is a list of hypothesized cause-effect chains in open-source projects. Each pathway's `mechanism` field describes the full story; the workshop code checks only the nodes listed in `nodes` (a deliberate simplification).
+`CAUSAL_PATHWAYS` is a list of hypothesized cause-effect chains in open-source projects. Each pathway's `mechanism` field describes the full story; the workshop code checks only the nodes listed in `nodes` (a deliberate simplification).
 
 - **Pathway 001 — Maintainer Departure Cascade:** Mechanism claims maintainer drop-off → slower reviews → fewer contributors. **Checked in code:** top contributor inactive; unique contributors declined quarter-over-quarter.
 - **Pathway 002 — Release Drought:** Mechanism claims long release gaps → adoption stall → fork surge. **Checked in code:** days since last release (or no releases found).
 
 Each pathway includes an `id`, `name`, `mechanism`, `nodes` (what the code actually checks), `detection` rules, `evidence_tier` of 2, and a `confidence_base` score (**arbitrary workshop weight**, scaled by `match_strength` — not a calibrated probability).
 
-**`analyze_causal_patterns(owner, repo)`** checks each pathway against real data from the repository:
+`analyze_causal_patterns(owner, repo)` checks each pathway against real data from the repository:
 
-| Pathway | What it checks |
-|---------|---------------|
-| 001 | Whether the top contributor's last active week was recent; whether unique contributors this quarter declined compared to last quarter |
-| 002 | How many days since the last release |
+
+| Pathway | What it checks                                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 001     | Whether the top contributor's last active week was recent; whether unique contributors this quarter declined compared to last quarter |
+| 002     | How many days since the last release                                                                                                  |
+
 
 For each pathway, it builds a result with: per-node `observations` (detected or not, with detail strings), counts of `nodes_detected` vs. `nodes_checked`, a `match_strength` ratio, the `evidence_tier`, an `adjusted_confidence` (base confidence scaled by match strength), and an `alternative_explanation`.
 
 The function returns evidence, not conclusions. It does **not** pick a "winner" pathway — that is the LLM's job.
 
-**`_get_alternative(pathway_id)`** returns a competing explanation for each pathway. Every causal claim must acknowledge at least one alternative:
+`_get_alternative(pathway_id)` returns a competing explanation for each pathway. Every causal claim must acknowledge at least one alternative:
 
 - Pathway 001: seasonal slowdown (holidays, summer)
 - Pathway 002: intentional stability in a mature project
+
+
 
 ### Evidence tiers (reminder for Part 3)
 
@@ -833,6 +898,8 @@ uv run --directory src python -c "from tools import analyze_causal_patterns; imp
 You are **building guardrails into the data layer** — alternatives and evidence tiers are not optional niceties. They prevent overconfident agents.
 
 ---
+
+
 
 ## Part 3 · Test: Wire tools to Groq (13 min)
 
@@ -856,6 +923,8 @@ Same choice as Parts 1 and 2:
 
 1. **Option A: Copy the code** — Paste the full working file below.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-2) and copy the prompt into Cursor chat.
+
+
 
 ### Option A: The code
 
@@ -1028,6 +1097,8 @@ if __name__ == "__main__":
     print(run_naive_agent(query))
 ```
 
+
+
 ### Option B: Let Cursor write it
 
 1. In Cursor's file explorer, right-click the `src/` folder → **New File** → name it `agent.py` (the file can be empty).
@@ -1080,21 +1151,23 @@ if __name__ == "__main__":
 Match patterns used elsewhere in this project. Do not add new dependencies.
 ```
 
+
+
 ### What that code does (in plain English)
 
 If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
 
 **Imports and setup.** Import `json`, `os`, `sys`, `dotenv`, `Groq`, `get_groq_model` from `config.py`, and the two tool functions from `tools.py`. Load `.env`, create the Groq client, and set `MODEL = get_groq_model()`. The default model is `openai/gpt-oss-20b`; set `GROQ_MODEL=qwen/qwen3.6-27b` in `.env` to use Qwen instead.
 
-**Tool schemas (`TOOLS`).** Define two function schemas in Groq's function-calling format. Each has a `name` (matching the Python function), a `description` that says what the tool returns *and* what it does not return, and `parameters` for `owner` and `repo` (both required strings). The descriptions are guardrails — saying "Does NOT return opinions" keeps the data-intelligence boundary intact.
+**Tool schemas (**`TOOLS`**).** Define two function schemas in Groq's function-calling format. Each has a `name` (matching the Python function), a `description` that says what the tool returns *and* what it does not return, and `parameters` for `owner` and `repo` (both required strings). The descriptions are guardrails — saying "Does NOT return opinions" keeps the data-intelligence boundary intact.
 
-**Tool function map (`TOOL_FUNCTIONS`).** A dictionary mapping tool name strings to the actual Python functions.
+**Tool function map (**`TOOL_FUNCTIONS`**).** A dictionary mapping tool name strings to the actual Python functions.
 
-**System prompt (`SYSTEM_PROMPT`).** This is the part where you decide how the agent should behave. Think about what you learned in Parts 1 and 2: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
+**System prompt (**`SYSTEM_PROMPT`**).** This is the part where you decide how the agent should behave. Think about what you learned in Parts 1 and 2: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
 
-**Agent loop (`run_agent`).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use `model=MODEL`. Print each tool call so you can see what happened.
+**Agent loop (**`run_agent`**).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use `model=MODEL`. Print each tool call so you can see what happened.
 
-**Naive agent (`run_naive_agent`).** Same model, but with a generic system prompt ("You are a helpful assistant") and no tools. This exists for comparison — to show the difference between an agent with structured data and one without.
+**Naive agent (**`run_naive_agent`**).** Same model, but with a generic system prompt ("You are a helpful assistant") and no tools. This exists for comparison — to show the difference between an agent with structured data and one without.
 
 **Main block.** When run from the command line, take an optional query argument (default: "Analyze the health of the pallets/flask repository"), run both agents on the same query, and print their outputs side by side.
 
@@ -1110,12 +1183,16 @@ uv run src/agent.py
 - Causal agent output cites real metrics with context
 - Naive agent often invents or guesses numbers — **that is the typical contrast** (re-run if your model happens to know the repo from pretraining)
 
+
+
 ### Try other repos
 
 ```bash
 uv run src/agent.py "Analyze the health of facebook/react"
 uv run src/agent.py "Should I contribute to psf/requests?"
 ```
+
+
 
 ### ADLC test note
 
@@ -1124,6 +1201,8 @@ You just **smoke-tested** the agent loop — tool calls fire, metrics come back 
 Your pipeline mirrors a staged production design: `get_repo_health` (retrieve facts) → `analyze_causal_patterns` (structured evidence) → LLM (narrative only after data is in hand).
 
 ---
+
+
 
 ## Part 4 · Deploy: Package as an Agent Skill (8 min)
 
@@ -1145,7 +1224,11 @@ Windows PowerShell:
 New-Item -ItemType Directory -Force -Path .cursor/skills/repo-health-analyst/scripts
 ```
 
+
+
 ### Step-by-step
+
+
 
 #### 1. Create `SKILL.md`
 
@@ -1153,13 +1236,13 @@ In Cursor's file explorer, right-click `.cursor/skills/repo-health-analyst/` →
 
 The file starts with **YAML frontmatter** — metadata between `---` lines at the top. Cursor reads this to know when to activate the skill and what it needs to run:
 
-- **`name`** identifies the skill in Cursor's skill list.
-- **`description`** tells Cursor when to suggest this skill — it matches against what you type in chat.
-- **`compatibility`** lists what must be installed for the skill to work.
+- `name` identifies the skill in Cursor's skill list.
+- `description` tells Cursor when to suggest this skill — it matches against what you type in chat.
+- `compatibility` lists what must be installed for the skill to work.
 
 **Copy and paste** the entire block below into `SKILL.md`:
 
-````markdown
+```markdown
 ---
 name: repo-health-analyst
 description: >
@@ -1219,7 +1302,7 @@ Present findings as a narrative briefing with these sections:
 2. **Health Assessment** — Metrics with reference context
 3. **Causal Analysis** — Pathway matches with evidence tiers and alternatives
 4. **Assessment** — Your synthesis based on all evidence
-````
+```
 
 The `description` field is how Cursor decides when to activate your skill — write it carefully. You can edit the wording later; this version matches the tools you built in Parts 1–2.
 
@@ -1257,12 +1340,16 @@ if __name__ == "__main__":
     print(json.dumps(result, indent=2, default=str))
 ```
 
+
+
 #### 4. Test the scripts
 
 ```bash
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
 ```
+
+
 
 #### 5. Test in Cursor (uses one Agent request)
 
@@ -1276,22 +1363,28 @@ Cursor **may** load your skill, run your scripts, and follow your rules — if i
 
 ### What you packaged
 
-| Layer | Artifact |
-|-------|----------|
-| Capability | `scripts/tools.py` |
-| Rules | `SKILL.md` |
-| Runtime | Cursor (or any Agent Skills-compatible tool) |
+
+| Layer      | Artifact                                     |
+| ---------- | -------------------------------------------- |
+| Capability | `scripts/tools.py`                           |
+| Rules      | `SKILL.md`                                   |
+| Runtime    | Cursor (or any Agent Skills-compatible tool) |
+
 
 You now have **two deployments** of the same logic:
 
 1. `src/agent.py` — standalone Groq agent
 2. `.cursor/skills/...` — editor-integrated skill
 
+
+
 ### ADLC deploy note
 
 Version your skill (`metadata.version` in frontmatter) — the same discipline as version pinning and rollback in production. Full deployment also integrates agents into business workflows (APIs, CRM, ticketing), defines fallbacks when tools fail, and monitors latency and task-completion rates after launch.
 
 ---
+
+
 
 ## Compare: Causal vs naive agent (7 min)
 
@@ -1333,11 +1426,13 @@ Open `agent-comparison.canvas.tsx` from the file explorer, then click **Open Can
 
 The canvas shows:
 
-| | Causal agent | Naive agent |
-|---|---|---|
-| Data source | GitHub API (tool calls) | No tools — often guesses or pretraining recall |
-| Context | z-scores, benchmarks | Raw numbers or guesses |
-| Causal claims | Tier + alternatives | Unqualified assertions |
+
+|               | Causal agent            | Naive agent                                    |
+| ------------- | ----------------------- | ---------------------------------------------- |
+| Data source   | GitHub API (tool calls) | No tools — often guesses or pretraining recall |
+| Context       | z-scores, benchmarks    | Raw numbers or guesses                         |
+| Causal claims | Tier + alternatives     | Unqualified assertions                         |
+
 
 Plus abbreviated sample narratives so you know what *grounded* vs *ungrounded* output looks like.
 
@@ -1355,12 +1450,14 @@ That three-question check is your evaluation harness — the simplest form of ag
 
 What you built today maps to a production stack — same layers, different packaging:
 
-| Layer | What you built | Production equivalent |
-|-------|----------------|----------------------|
-| Data intelligence | `tools.py` | Shared library or service — facts, flags, evidence tiers only |
-| Tool-call / integration | `agent.py` `TOOLS` + dispatch | MCP server, API gateway, or host-native function calling |
-| Orchestration | Groq loop + `SYSTEM_PROMPT` | Agent runtime — routing, guardrails, memory, fallbacks |
-| Deploy | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing) |
+
+| Layer                   | What you built                     | Production equivalent                                         |
+| ----------------------- | ---------------------------------- | ------------------------------------------------------------- |
+| Data intelligence       | `tools.py`                         | Shared library or service — facts, flags, evidence tiers only |
+| Tool-call / integration | `agent.py` `TOOLS` + dispatch      | MCP server, API gateway, or host-native function calling      |
+| Orchestration           | Groq loop + `SYSTEM_PROMPT`        | Agent runtime — routing, guardrails, memory, fallbacks        |
+| Deploy                  | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing)         |
+
 
 **Agent runtime** — the orchestration row above. In Part 3, that is your `run_agent` loop: it calls the Groq API each turn, reads tool-call requests from the model, runs your Python functions, and appends results back into the conversation until the model returns a final answer. In production, the runtime is the same idea at larger scale — often a service or framework (LangGraph, custom Python, Cursor's agent host) that:
 
@@ -1387,6 +1484,8 @@ The runtime is the **conductor**, not the musician: it does not host model weigh
 
 ---
 
+
+
 ## Optional: Operate & monitor discussion (8 min)
 
 *Skip this section in a 75-minute session unless you have extra time. The [Compare section](#compare-causal-vs-naive-agent-7-min) is the recommended wrap-up.*
@@ -1398,12 +1497,11 @@ ADLC does not end at deploy. Operate-and-monitor practices track latency, task c
 ### Discussion questions (optional)
 
 1. **The boundary test.** `is_declining` uses z-score < -1.0. Is the threshold a fact or a judgment? Where does the line fall?
-
 2. **Evidence tiers.** What data would you need to move from Tier 2 (pattern) to Tier 3 (peer comparison)?
-
 3. **Prompt sensitivity.** Remove one rule from `SYSTEM_PROMPT` and re-run. How much intelligence came from tools vs. instructions?
-
 4. **Same data, different users.** How would you change the prompt (not the tools) for a CTO vs. a new contributor?
+
+
 
 ### What you would add for production (operate & monitor)
 
@@ -1417,7 +1515,11 @@ ADLC does not end at deploy. Operate & monitor is the phase that keeps an agent 
 
 ---
 
+
+
 ## Reference card
+
+
 
 ### Project structure
 
@@ -1450,6 +1552,8 @@ causal-agent-workshop/
 └── uv.lock
 ```
 
+
+
 ### Commands
 
 Open the terminal in Cursor from the **project root**, then run these **one at a time**:
@@ -1470,6 +1574,8 @@ uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
 ```
 
+
+
 ### The five rules
 
 Target behavior for the causal agent (enforce via prompts and evaluation, not Python alone):
@@ -1482,6 +1588,8 @@ Target behavior for the causal agent (enforce via prompts and evaluation, not Py
 
 ---
 
+
+
 ## Going further
 
 - **Peer cohort tool** — z-scores against similar repos, not just self-history
@@ -1490,6 +1598,8 @@ Target behavior for the causal agent (enforce via prompts and evaluation, not Py
 - **Publish your skill** — share on GitHub for others to clone
 
 ---
+
+
 
 ## License
 

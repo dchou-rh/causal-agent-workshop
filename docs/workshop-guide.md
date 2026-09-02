@@ -535,11 +535,11 @@ You just defined the **contract** for your data layer. Every consumer of `get_re
 
 ### Why correlation is not enough
 
-Part 1 tells you *what* is happening. Part 2 asks *why* — but only from **observational** data: GitHub timelines, issue counts, contributor stats. You did not run an experiment, so two things moving together is **association**, not proof that one caused the other.
+Part 1 answered **what** is happening — metrics with baselines and flags. Part 2 asks **why**, but only from **observational** GitHub data: timelines, issue counts, contributor stats. You watch repos over time; you do not run a controlled experiment. When two trends move together in that setting, you have **association** — they co-occur. That is not the same as showing one caused the other.
 
-**Confounding** is the usual trap: another explanation fits the same pattern. Commits fall while a maintainer steps back — or during a holiday quarter, a platform outage, or a shift in project scope. Without ruling out those alternatives, even a convincing story is **unidentified** — co-occurring events, not evidence of cause and effect.
+**Why not?** Because of **confounding**: you often cannot tell whether A caused B, or whether something else explains both. Commits fall while a maintainer steps back — the maintainer may have driven the drop, or a holiday quarter, a platform outage, or a scope shift could explain the same pattern. Same chart, different causes. Until you can rule out those alternatives, any *why* claim stays **unidentified**, no matter how convincing it sounds.
 
-LLMs make this worse by narrating fluent *why* stories from thin evidence. Part 2 constrains that with **structured hypotheses** (pathways), **competing explanations**, and **evidence tiers** — so the model reasons over what the tools return instead of inventing mechanism.
+LLMs will narrate a *why* anyway — fluently, from thin evidence. Part 2 does not solve causal identification on GitHub logs; it **structures** the reasoning so the agent stays honest. You will build **pathway templates** (hypothesized mechanisms), require **competing explanations** on every match, and label **evidence tiers** (how strong the claim is). The sections below define that framework; then you implement it in `analyze_causal_patterns`.
 
 ### Pearl's ladder — three types of "why" questions
 

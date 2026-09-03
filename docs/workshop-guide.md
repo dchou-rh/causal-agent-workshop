@@ -122,7 +122,7 @@ A small agent that:
 | Time      | ADLC phase       | What you do                                                              |
 | --------- | ---------------- | ------------------------------------------------------------------------ |
 | 0:00–0:05 | *(Pre-workshop)* | [Setup check](#start-here--setup-check-5-min) — sync files + `verify.py` |
-| 0:05–0:13 | **Plan**         | Data-intelligence boundary + Cursor Plan mode                            |
+| 0:05–0:13 | **Plan**         | Scope the repo health agent + Cursor Plan mode                           |
 | 0:13–0:30 | **Build**        | Part 1 — `get_repo_health`                                               |
 | 0:30–0:47 | **Build**        | Part 2 — `analyze_causal_patterns`                                       |
 | 0:47–1:00 | **Test**         | Part 3 — wire tools to Groq; smoke-test the agent                        |
@@ -166,7 +166,7 @@ This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as
 
 | IBM ADLC phase        | Workshop section                     | What you produce                                                                           |
 | --------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
-| **Plan**              | Plan: The data-intelligence boundary | Problem scope, success criteria, Cursor plan                                               |
+| **Plan**              | Plan: Scope the repo health agent    | Problem scope, success criteria, Cursor plan                                               |
 | **Build**             | Part 1 + Part 2                      | `tools.py` — facts, flags, causal evidence                                                 |
 | **Test**              | Part 3                               | `agent.py` — agent loop wired and smoke-tested                                             |
 | **Deploy**            | Part 4                               | Agent Skill (`SKILL.md` + scripts)                                                         |
@@ -198,24 +198,32 @@ Each section below calls out which ADLC phase you are in and what deliverable yo
 
 
 
-## Plan: The data-intelligence boundary (8 min)
+## Plan: Scope the repo health agent (8 min)
 
-**ADLC phase: Plan** — define the problem, scope, and success criteria. Practice **Plan mode** in Cursor before any code.
+**ADLC phase: Plan** — nail down what you are building, where facts end and judgment begins, then practice **Plan mode** in Cursor before any code.
 
-*Light coding-free discussion, then a short Plan-mode exercise (~4 min).*
+*~4 min on scope and the data-intelligence boundary, then ~4 min in Plan mode.*
 
-### The core question
+### The problem we are solving
 
-Most "AI agent" tutorials connect an LLM to an API and stop. That produces a **chatbot** — it talks confidently but may invent numbers.
+**User scenario:** A developer wants to know whether an open-source project is worth adopting or contributing to — e.g. *"Should I contribute to `pallets/flask`?"* or *"Is `psf/requests` healthy?"*
 
-This workshop builds an **intelligence agent** — one designed to **tie claims to retrieved data** and state how confident each claim should be. That is the target; you still need prompts, tools, and evaluation to get there reliably.
+A generic LLM can answer from memory — fluently, but often without live data or honest uncertainty. This workshop builds a **repo health analyst** that grounds its briefing in GitHub:
 
-You will build the workshop version of that enterprise split: `tools.py` for auditable facts (your data layer), prompts and `SKILL.md` for how to interpret them (your guidance architecture).
+| Piece | What it does | Where you build it |
+| ----- | ------------ | ------------------ |
+| **Data tools** | Pull live metrics, add benchmarks and flags, return causal pathway matches with evidence tiers | `tools.py` (Parts 1–2) |
+| **Agent loop** | Call tools, synthesize a narrative briefing | `agent.py` (Part 3) |
+| **Packaging** | Ship capability + interpretation rules for reuse | Agent Skill (Part 4) |
+
+That table is the high-level scope for the session. Planning means turning it into a design: what each tool returns, what the LLM is allowed to infer, and how you will know the agent succeeded.
 
 ### Where to draw the line
 
+The [design patterns](#design-patterns-for-intelligence-agents-not-chatbots) above apply directly to this agent. For `tools.py` vs the LLM:
 
-| Data layer (your Python code)              | Intelligence layer (the LLM)                       |
+
+| Data layer (`tools.py`)                    | Intelligence layer (LLM + prompts)                 |
 | ------------------------------------------ | -------------------------------------------------- |
 | Numbers, flags, z-scores                   | What those numbers mean for the user               |
 | Historical benchmarks                      | Whether a deviation matters given relevant context |
@@ -223,18 +231,15 @@ You will build the workshop version of that enterprise split: `tools.py` for aud
 | Methodology notes ("Tier 2 pattern match") | Narrative synthesis                                |
 
 
-**Think about it:** Look at the right column. What is the LLM using to make each of those judgments? What happens to the agent's output if the left column is missing, wrong, or incomplete?
+**Think about it:** What is the LLM using to make each judgment in the right column? What happens if the left column is missing or wrong?
 
-**Rule of thumb:** If it could be wrong in a spreadsheet, it belongs in Python. If it requires judgment, it belongs in the LLM — but only if the data layer gives it something to judge and the right context needed to make a sound judgement.
+**Rule of thumb:** If it could be wrong in a spreadsheet, it belongs in Python. If it requires judgment, it belongs in the LLM — but only if the data layer supplies the facts and context to judge from.
 
-### ADLC planning checklist (for this agent)
+### Success criteria (your plan should cover these)
 
-Here is what we are building. In a real project, you would figure these out yourself before writing code:
-
-- **Problem:** Help someone evaluate open-source project health on GitHub
-- **Inputs:** Repository owner + name (e.g. `pallets/flask`)
-- **Outputs:** Structured metrics, causal evidence, narrative briefing
-- **Success (target behavior):** Agent should not quote a metric unless a tool returned it; causal claims should include evidence tier + alternative (verify in the [Evaluate](#compare-causal-vs-naive-agent-7-min) section)
+- **Inputs:** GitHub `owner` + `repo` (e.g. `pallets/flask`)
+- **Outputs:** Structured tool results plus a narrative briefing the user can act on
+- **Success (target behavior):** The agent does not quote a metric unless a tool returned it; causal claims include an evidence tier and an alternative explanation (you verify this in [Evaluate](#compare-causal-vs-naive-agent-7-min))
 
 ---
 
@@ -242,7 +247,7 @@ Here is what we are building. In a real project, you would figure these out your
 
 ### Try it: Plan in Cursor (~4 min)
 
-**ADLC in practice:** The checklist above is your plan. In Cursor, **[Plan mode](https://cursor.com/docs/agent/plan-mode)** supports the same *idea* — research the codebase, ask clarifying questions, and produce a **reviewable plan** you can edit before any code runs. That is *plan before you prompt* in action.
+You have the problem, scope, and boundary. Next step in ADLC is to turn that into a **reviewable implementation plan** before any code runs. Cursor **[Plan mode](https://cursor.com/docs/agent/plan-mode)** is built for that — it researches the repo, can ask clarifying questions, and produces a plan you can edit or reject.
 
 #### Steps
 
@@ -252,7 +257,7 @@ Here is what we are building. In a real project, you would figure these out your
 4. Answer any clarifying questions Cursor asks (pick sensible defaults if you are unsure).
 5. When the plan appears, read it — especially which work belongs in `tools.py` vs. the LLM.
 
-**Do not click Build yet.** The learning goal is to **review the plan** against the data-intelligence boundary. Build switches to Agent mode and starts editing files — save that for [Option B](#option-b-let-cursor-write-it) in Parts 1–3 if you want.
+**Do not click Build yet.** The learning goal is to **review the plan** against the scope and boundary above. Build switches to Agent mode and starts editing files — save that for [Option B](#option-b-let-cursor-write-it) in Parts 1–3 if you want.
 
 > **Workshop quota:** Plan mode uses one Agent session. In a live session, the facilitator can demo on one screen while the room discusses the plan. Pairs work too: one partner runs Plan mode, the other scores the plan against the table above.
 
@@ -282,7 +287,7 @@ Planning only — do not implement or edit files yet.
 
 With the plan open, check as a group (or with your partner):
 
-1. Does the plan keep **facts in Python** and **judgment in the LLM** — matching the table above?
+1. Does the plan keep **facts in `tools.py`** and **judgment in the LLM** — matching the boundary table?
 2. Are success criteria **testable** (not vague like "good answers")?
 3. What would you change before clicking **Build**?
 

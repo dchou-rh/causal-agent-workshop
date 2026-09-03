@@ -516,12 +516,12 @@ On rung 1, not all observational claims are equally supported. This workshop use
 > **Workshop scope:** `analyze_causal_patterns` returns **Tier 2** evidence only. Tiers 3–4 are in the rubric so the agent can narrate honestly — do not claim Tier 3 or 4 unless you build tools that produce peer comparisons or statistical tests.
 
 
-| If the agent says…                                               | Honest at this tier?                             |
-| ---------------------------------------------------------------- | ------------------------------------------------ |
-| "Following maintainer inactivity, we observed declining commits" | Yes — Tier 1                                     |
-| "This matches a maintainer-departure cascade pattern"            | Yes — Tier 2                                     |
-| "Adding a maintainer would restore velocity"                     | **No** — implies intervention, not in the logs   |
-| "The decline would not have happened without burnout"            | **No** — implies counterfactual, not in the logs |
+| If the agent says…                                               | Supported by observational data (Rung 1)?                            |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------- |
+| "Following maintainer inactivity, we observed declining commits" | Yes — Tier 1 (temporal sequence)                                     |
+| "This matches a maintainer-departure cascade pattern"            | Yes — Tier 2 (pattern match)                                         |
+| "Adding a maintainer would restore velocity"                     | **No** — implies intervention (Rung 2), not supported by GitHub logs |
+| "The decline would not have happened without burnout"            | **No** — implies counterfactual (Rung 3), not supported by GitHub logs |
 
 
 ### The methodology — what you will build
@@ -529,21 +529,11 @@ On rung 1, not all observational claims are equally supported. This workshop use
 This section implements a four-step process the agent will use in **Test**:
 
 1. **Hypothesize** — Define **pathway templates** in `CAUSAL_PATHWAYS`: plain-English stories of how decline might happen (e.g. maintainer leaves → fewer contributors).
-2. **Match** — `analyze_causal_patterns` checks whether repo data fits signals in each template. This is **pattern matching**, not proof.
+2. **Match** — `analyze_causal_patterns` checks whether repo data fits signals in each template (using metrics from the previous Build section). This is **pattern matching**, not proof.
 3. **Compete** — Every match returns an `alternative_explanation` — another story that could explain the same signals.
 4. **Label** — Return the evidence tier (Tier 2) so the LLM states how strong the claim is.
 
 That is **abductive** reasoning: the best-fitting story under constraints — not causal identification. A seasonal slowdown could fit the same signals as a maintainer departure; the alternative and tier make that uncertainty explicit.
-
-
-| What you build                  | Role in the process                         |
-| ------------------------------- | ------------------------------------------- |
-| `CAUSAL_PATHWAYS` (causal reasoning) | Hypothesized mechanism templates            |
-| `analyze_causal_patterns`       | Pattern match against live GitHub data      |
-| `alternative_explanation`       | Competing story for every pathway           |
-| Evidence tier in tool output    | Explicit strength label for the LLM to cite |
-| Contextualized metrics (data tools) | Facts with baselines — inputs to matching   |
-
 
 **Extension:** See [Beyond rung 1](#beyond-rung-1--discussion) at the end of this section for how you would build toward intervention and counterfactual claims.
 
@@ -556,7 +546,7 @@ Same choice as [Build: Data tools](#build-data-tools-with-context-17-min):
 
 ### Option A: The code
 
-Still in `src/tools.py`, replace the `analyze_causal_patterns` and `_get_alternative` stubs with the code below. Paste it after the `_classify_trend` function you added in [Build: Data tools](#build-data-tools-with-context-17-min). You also need to add the `CAUSAL_PATHWAYS` data structure — paste it between `_classify_trend` and `analyze_causal_patterns`:
+Still in `src/tools.py`, replace the `analyze_causal_patterns` and `_get_alternative` stubs with the code block below (which includes `CAUSAL_PATHWAYS`, `analyze_causal_patterns`, and `_get_alternative`), pasted after `_classify_trend`:
 
 ```python
 CAUSAL_PATHWAYS = [
@@ -571,7 +561,7 @@ CAUSAL_PATHWAYS = [
         ),
         "nodes": ["maintainer_inactive", "contributor_decline"],
         "detection": {
-            "maintainer_inactive": "Top contributor's last commit > 90 days ago",
+            "maintainer_inactive": "Top contributor had 0 commits in the most recent week",
             "contributor_decline": "Unique contributors this quarter < prior quarter",
         },
         "evidence_tier": 2,
@@ -726,7 +716,7 @@ def _get_alternative(pathway_id: str) -> str:
 **Cursor prompt (copy and paste):**
 
 ```
-Implement the causal-reasoning **Build** section in src/tools.py: CAUSAL_PATHWAYS, analyze_causal_patterns, and _get_alternative.
+Implement causal reasoning in src/tools.py: CAUSAL_PATHWAYS, analyze_causal_patterns, and _get_alternative.
 
 Replace the NotImplementedError stubs. Add CAUSAL_PATHWAYS after _classify_trend with exactly two pathways:
 
@@ -758,23 +748,12 @@ Use the existing gh client. Match the existing code style. Do not add new depend
 
 If you chose Option A, read through this to understand what you pasted. If you chose Option B, use the prompt above, then read this section to verify Cursor's output matches the intent.
 
-`CAUSAL_PATHWAYS` is a list of hypothesized cause-effect chains in open-source projects. Each pathway's `mechanism` field describes the full story; the workshop code checks only the nodes listed in `nodes` (a deliberate simplification).
+`CAUSAL_PATHWAYS` defines hypothesized cause-effect chains in open-source projects. Each pathway includes an `id`, `name`, a narrative `mechanism`, an `evidence_tier` (Tier 2), a `confidence_base` (an arbitrary workshop weight scaled by match strength, not a calibrated probability), and `nodes` representing the subset of signals checked in code:
 
-- **Pathway 001 — Maintainer Departure Cascade:** Mechanism claims maintainer drop-off → slower reviews → fewer contributors. **Checked in code:** top contributor inactive; unique contributors declined quarter-over-quarter.
-- **Pathway 002 — Release Drought:** Mechanism claims long release gaps → adoption stall → fork surge. **Checked in code:** days since last release (or no releases found).
+- **Pathway 001 — Maintainer Departure Cascade:** Hypothesizes maintainer drop-off → slower reviews → fewer contributors. **Checked in code:** top contributor inactive in recent week; unique contributors declined quarter-over-quarter.
+- **Pathway 002 — Release Drought:** Hypothesizes long release gaps → adoption stall → fork surge. **Checked in code:** days since last release (or no releases found).
 
-Each pathway includes an `id`, `name`, `mechanism`, `nodes` (what the code actually checks), `detection` rules, `evidence_tier` of 2, and a `confidence_base` score (**arbitrary workshop weight**, scaled by `match_strength` — not a calibrated probability).
-
-`analyze_causal_patterns(owner, repo)` checks each pathway against real data from the repository:
-
-
-| Pathway | What it checks                                                                                                                        |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| 001     | Whether the top contributor's last active week was recent; whether unique contributors this quarter declined compared to last quarter |
-| 002     | How many days since the last release                                                                                                  |
-
-
-For each pathway, it builds a result with: per-node `observations` (detected or not, with detail strings), counts of `nodes_detected` vs. `nodes_checked`, a `match_strength` ratio, the `evidence_tier`, an `adjusted_confidence` (base confidence scaled by match strength), and an `alternative_explanation` (when nodes are detected).
+`analyze_causal_patterns(owner, repo)` checks those pathways against real data from the repository. For each pathway, it builds a result with: per-node `observations` (detected or not, with detail strings), counts of `nodes_detected` vs. `nodes_checked`, a `match_strength` ratio, the `evidence_tier`, an `adjusted_confidence` (base confidence scaled by match strength), and an `alternative_explanation` (when nodes are detected).
 
 The function returns evidence, not conclusions. It does **not** pick a "winner" pathway — that is the LLM's job.
 
@@ -782,10 +761,6 @@ The function returns evidence, not conclusions. It does **not** pick a "winner" 
 
 - Pathway 001: seasonal slowdown (holidays, summer)
 - Pathway 002: intentional stability in a mature project
-
-### Evidence tiers (reminder for Test)
-
-Your tools return **Tier 2** evidence. When the agent narrates causal claims, the system prompt should require naming the tier and including the alternative — and should not imply statistical proof or intervention-level certainty. Compliance is something you **evaluate**, not something Python enforces.
 
 ### Checkpoint
 
@@ -797,7 +772,7 @@ uv run --directory src python -c "from tools import analyze_causal_patterns; imp
 
 ### ADLC build note
 
-You are **building guardrails into the data layer** — alternatives and evidence tiers are not optional niceties. They prevent overconfident agents.
+You are **building guardrails into the data layer** — alternatives and evidence tiers are not optional niceties; they prevent overconfident agents. Your tools return Tier 2 evidence with explicit alternatives so the agent in **Test** has the structured facts it needs to qualify its claims honestly (compliance is something you evaluate in the prompt and output, not something Python enforces).
 
 ### Beyond rung 1 — discussion
 
@@ -840,12 +815,12 @@ The agent should still **name the assumptions** behind any counterfactual. Refus
 **What stays the same**
 
 
-| Workshop today                             | Rungs 2–3 in production                                        |
-| ------------------------------------------ | -------------------------------------------------------------- |
-| `tools.py` returns facts, not opinions     | New tools for experiments, cohorts, or fitted causal estimates |
-| Evidence tiers label strength              | Tier 3–4 tools back stronger tiers                             |
-| `alternative_explanation` on every pathway | Competing models or assumptions, not just competing stories    |
-| LLM synthesizes; Python does not judge     | Same data-intelligence boundary                                |
+| Workshop today                             | Rungs 2–3 in production                                                                      |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `tools.py` returns facts, not opinions     | New tools for experiments, cohorts, or fitted causal estimates                               |
+| Evidence tiers label strength              | Explicit evidence labels (e.g. identified ATE, model assumptions, or Tier 3–4 peer cohorts)  |
+| `alternative_explanation` on every pathway | Competing models or assumptions, not just competing stories                                  |
+| LLM synthesizes; Python does not judge     | Same data-intelligence boundary                                                              |
 
 
 ---

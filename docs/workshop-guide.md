@@ -932,7 +932,7 @@ An **agent loop:**
 User question → LLM decides which tools to call → your Python runs → LLM synthesizes answer
 ```
 
-Plus a **naive agent** with no tools — for comparison. This is your evaluation harness.
+Plus a **naive agent** with no tools — for comparison in [Compare](#compare-causal-vs-naive-agent-7-min).
 
 ### Two ways to implement
 
@@ -1248,7 +1248,7 @@ uv run src/agent.py "Should I contribute to psf/requests?"
 
 ### ADLC test note
 
-You just **smoke-tested** the agent loop — tool calls fire, metrics come back with context. That is the **Test** phase: integration works. The full **Evaluate** phase comes later in [Compare: Causal vs naive agent](#compare-causal-vs-naive-agent-7-min), where you deliberately compare grounded vs ungrounded output.
+You just **smoke-tested** the agent loop — tool calls fire, metrics come back with context. That is the **Test** phase: integration works. The **Evaluate** payoff is in [Compare: Causal vs naive agent](#compare-causal-vs-naive-agent-7-min), where you compare grounded vs ungrounded output.
 
 Your pipeline mirrors a staged production design: `get_repo_health` (retrieve facts) → `analyze_causal_patterns` (structured evidence) → LLM (narrative only after data is in hand).
 
@@ -1509,8 +1509,6 @@ With your terminal output and the canvas open, answer as a group:
 2. Did the causal agent state an evidence tier and an alternative?
 3. Which briefing would you send to a colleague deciding whether to adopt the repo?
 
-That three-question check is your evaluation harness — the simplest form of agent testing.
-
 ### Step 4 — From workshop to production (2 min)
 
 What you built today maps to a production stack — same layers, different packaging:
@@ -1542,10 +1540,17 @@ The runtime is the **conductor**, not the musician: it does not host model weigh
 
 **RAG vs Skills** — both can add context to the prompt, but they solve different problems. **Skills** (Part 4) package curated **capability + rules** — when to activate, which scripts to run, how to interpret output. **RAG** searches a **large or fast-changing doc corpus** per query (policies, wikis, past reports). Use RAG when that knowledge is too big or dynamic to maintain in `SKILL.md`; use Skills when you need a versioned workflow with executable tools. RAG **complements** live API tools — it does not replace `tools.py` or evidence tiers; retrieved text can still be associative.
 
+**Evaluation harness** — a set of repeatable checks teams use to judge whether an agent still produces trustworthy, grounded output after changes to the prompt, model, skill, or tools. The idea is similar to regression tests for code, but the behavior is probabilistic — so cases and assertions often focus on tool use and grounding rather than an exact string match. In this workshop, Step 3 is a lightweight manual version of that pattern; in production, teams often automate it as a scripted suite they can rerun in CI.
+
+- **Cases** — a prompt, repo, and expected tool calls (here: causal vs naive on the same query)
+- **Assertions** — checks on the final answer, such as citing tool output and stating tier + alternative (here: the three Step 3 questions)
+- **Golden tool tests** — known repos with expected flags (here: Part 1–2 checkpoints)
+- **When to rerun** — commonly after prompt, model, or skill changes
+- **What to test where** — deterministic flag and metric logic often belongs in `tools.py`; behavioral checks (e.g. skipped tools or ungrounded numbers) may need the full agent loop
+
 **Other production essentials** (beyond what fits in 75 minutes):
 
 - **Monitoring** — latency, task completion, tool-call failures, token cost (the commented Langfuse lines in `agent.py` are the workshop hook for this)
-- **Evaluation suite** — test repos with expected flag values; rerun after prompt or model changes
 - **Access control** — least-privilege tokens; deployed agents get their own identity and inherited permissions
 - **Fallbacks** — what happens when GitHub rate-limits, Groq is down, or the model skips a tool call
 - **Versioning** — pin model, prompt, and skill versions; rollback when behavior drifts

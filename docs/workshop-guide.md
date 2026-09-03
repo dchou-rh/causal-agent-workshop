@@ -116,41 +116,6 @@ A small agent that:
 
 
 
-## Schedule at a glance
-
-
-| Time      | ADLC phase       | What you do                                                              |
-| --------- | ---------------- | ------------------------------------------------------------------------ |
-| 0:00–0:05 | *(Pre-workshop)* | [Setup check](#start-here--setup-check-5-min) — sync files + `verify.py` |
-| 0:05–0:13 | **Plan**         | Scope the repo health agent + Cursor Plan mode                           |
-| 0:13–0:30 | **Build**        | Part 1 — `get_repo_health`                                               |
-| 0:30–0:47 | **Build**        | Part 2 — `analyze_causal_patterns`                                       |
-| 0:47–1:00 | **Test**         | Part 3 — wire tools to Groq; smoke-test the agent                        |
-| 1:00–1:08 | **Deploy**       | Part 4 — package as an Agent Skill                                       |
-| 1:08–1:15 | **Evaluate**     | Compare causal vs naive agent + production architecture close-out        |
-
-
-**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
-
-### Quick reference
-
-
-| ADLC phase                         | Part  | File                                  | What you build                                         |
-| ---------------------------------- | ----- | ------------------------------------- | ------------------------------------------------------ |
-| *(Pre-workshop)*                   | Setup | `src/verify.py`                       | Confirm GitHub + Groq access                           |
-| **Plan**                           | —     | —                                     | Problem scope, data-intelligence boundary, Cursor plan |
-| **Build**                          | 1     | `src/tools.py`                        | `get_repo_health` with contextual benchmarks           |
-| **Build**                          | 2     | `src/tools.py`                        | `analyze_causal_patterns` causal reasoning layer       |
-| **Test**                           | 3     | `src/agent.py`                        | Full Groq agent with function calling                  |
-| **Deploy**                         | 4     | `.cursor/skills/repo-health-analyst/` | Portable Agent Skill                                   |
-| **Evaluate**                       | —     | —                                     | Causal vs naive comparison + production close-out      |
-| **Operate & monitor** *(optional)* | —     | —                                     | Ongoing discipline after launch — see appendix         |
-
-
----
-
-
-
 ## ADLC: How this workshop is structured
 
 **ADLC** (Agent Development Lifecycle) is an emerging industry trend for building and operating AI agents in real workflows — analogous to how SDLC structures traditional software delivery. Vendors and teams define the phases differently; there is no single standard yet. **This workshop uses [IBM's ADLC framework](https://www.ibm.com/think/topics/agent-development-lifecycle-adlc)** as its organizing model:
@@ -162,6 +127,8 @@ Traditional software (**SDLC**) is deterministic: the same input yields the same
 ### How the workshop maps to ADLC
 
 This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as the wrap-up. **Operate & monitor** is optional reading after the session.
+
+**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
 
 
 | IBM ADLC phase        | Workshop section                     | What you produce                                                                           |

@@ -555,6 +555,8 @@ LLMs will narrate a *why* anyway — fluently, from thin evidence. Part 2 does n
 
 GitHub logs keep you on **rung 1**.
 
+> **Resource:** [Causal AI: How cause and effect will change artificial intelligence](https://www.spglobal.com/en/research-insights/special-reports/causal-ai-how-cause-and-effect-will-change-artificial-intelligence) (S&P Global) — industry perspective on moving beyond correlation in AI systems.
+
 ### Evidence tiers — how strong is the claim?
 
 On rung 1, not all observational claims are equally supported. This workshop uses four **evidence tiers** — a rubric for how much an agent can justify from GitHub data alone:

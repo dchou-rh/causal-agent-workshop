@@ -173,9 +173,11 @@ Each section below calls out which ADLC phase you are in and what deliverable yo
 
 ### The problem we are solving
 
-**User scenario:** A developer wants to know whether an open-source project is worth adopting or contributing to — e.g. *"Should I contribute to `pallets/flask`?"* or *"Is `psf/requests` healthy?"*
+**User scenario:** A developer is about to invest real time in an open-source project — adopting it as a dependency, or contributing their first pull request — and needs to judge **project health** before committing. Are commits and contributors holding steady or sliding? Are maintainers still active? If something looks off, is there a plausible explanation — or a reason to walk away?
 
-A generic LLM can answer from memory — fluently, but often without live data or honest uncertainty. This workshop builds a **repo health analyst** that grounds its briefing in GitHub:
+Typical questions sound like: *"Should I contribute to `pallets/flask`?"* or *"Can we ship `psf/requests` as a production dependency — is it still actively maintained?"* The hard part is not getting an answer — it is getting one **grounded in current data**, not training-memory guesses.
+
+This workshop builds a **repo health analyst** that pulls live GitHub metrics and structures the reasoning:
 
 | Piece | What it does | Where you build it |
 | ----- | ------------ | ------------------ |

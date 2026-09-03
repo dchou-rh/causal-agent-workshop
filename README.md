@@ -84,14 +84,14 @@ A panel opens at the bottom of the screen with a blinking cursor. That is your t
 > **What's included in the Hobby plan?** Per [Cursor's pricing page](https://cursor.com/pricing), Hobby is free forever with no credit card and includes:
 >
 > - The full VS Code-based editor (file explorer, integrated terminal, Git, extensions)
-> - **Limited Agent requests** — enough for this workshop's Part 4 skill demo
+> - **Limited Agent requests** — enough for this workshop's Deploy skill demo
 > - **Access to Composer** — Cursor's multi-file editing mode
 >
 > Cursor does not publish exact monthly caps for the free tier. If you hit a limit during the workshop, the editor and terminal still work — you can finish all Python exercises from the command line with `uv run`. Check remaining usage in **Cursor Settings → Account**.
 
 > **Workshop tip:** Disable **Cursor Tab** autocomplete during the workshop (**Cursor Settings → Tab**). Tab completions count against free-tier limits and are not needed for this exercise.
 
-> **Model choice (if you use Cursor AI):** Parts 1–3 do not require Cursor chat — use **Option A** in the [workshop guide](docs/workshop-guide.md) and paste the provided code. **Part 4** asks you to test your Agent Skill in chat (**Cmd+L** / **Ctrl+L**) — that step uses one Agent request to confirm Cursor loads your skill and runs your scripts. If you are out of quota, you can still finish Part 4 by running the skill scripts from the terminal (see the workshop guide); you will miss the in-editor skill demo only. If you do use chat, pick the cheapest available model: **Composer 2.5** (not "Fast") or **Auto** if Hobby only allows Auto. Avoid Opus, Sonnet, GPT-5.x, and other premium models — they burn free-tier quota quickly. Your workshop agent (`uv run src/agent.py`) runs on **Groq**, not Cursor; keep `openai/gpt-oss-20b` as the default in `.env`.
+> **Model choice (if you use Cursor AI):** **Build** and **Test** do not require Cursor chat — use **Option A** in the [workshop guide](docs/workshop-guide.md) and paste the provided code. **Deploy** asks you to test your Agent Skill in chat (**Cmd+L** / **Ctrl+L**) — that step uses one Agent request to confirm Cursor loads your skill and runs your scripts. If you are out of quota, you can still finish **Deploy** by running the skill scripts from the terminal (see the workshop guide); you will miss the in-editor skill demo only. If you do use chat, pick the cheapest available model: **Composer 2.5** (not "Fast") or **Auto** if Hobby only allows Auto. Avoid Opus, Sonnet, GPT-5.x, and other premium models — they burn free-tier quota quickly. Your workshop agent (`uv run src/agent.py`) runs on **Groq**, not Cursor; keep `openai/gpt-oss-20b` as the default in `.env`.
 
 > VS Code works too. After Step 1, this guide uses Cursor's built-in terminal for everything — you do not need a separate terminal app.
 

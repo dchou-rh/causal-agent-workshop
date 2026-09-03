@@ -56,7 +56,7 @@ Groq OK: ready
 
 Both lines must say `OK`.
 
-Open `src/tools.py`. You will implement the functions marked `NotImplementedError` during Parts 1 and 2.
+Open `src/tools.py`. You will implement the functions marked `NotImplementedError` during the two **Build** sections.
 
 **Stuck?** See [README troubleshooting](../README.md#troubleshooting).
 
@@ -64,13 +64,13 @@ Open `src/tools.py`. You will implement the functions marked `NotImplementedErro
 
 Before the hands-on sections, decide how much you will rely on Cursor AI — especially on the **free tier**, where Plan and Agent sessions are limited.
 
-**Default path (recommended for live sessions):** paste the working code from this guide. Every part includes complete blocks for `src/tools.py`, `agent.py`, and the Agent Skill. No AI credits required, and the room stays on schedule.
+**Default path (recommended for live sessions):** paste the working code from this guide. Every section includes complete blocks for `src/tools.py`, `agent.py`, and the Agent Skill. No AI credits required, and the room stays on schedule.
 
-**If you want to use Cursor AI**, spread sessions across the workshop rather than spending them all in Part 1:
+**If you want to use Cursor AI**, spread sessions across the workshop rather than spending them all in the first **Build** section:
 
-- **Plan** — try [Plan mode](https://cursor.com/docs/agent/plan-mode) once to draft an implementation plan before you code (see [Plan: Scope the repo health agent](#plan-scope-the-repo-health-agent-8-min)). Review the plan as a group; do not click **Build** unless you intend to let Cursor write code for you in Parts 1–3.
-- **Parts 1–3** — each part also includes an optional prompt so Cursor can implement the exercise instead of paste; that typically costs an Agent session per part. In a live session, **pair up**: one person pastes reference code, the other tries Cursor, or swap roles between parts.
-- **Part 4** — save one Agent chat to test your packaged skill in Cursor.
+- **Plan** — try [Plan mode](https://cursor.com/docs/agent/plan-mode) once to draft an implementation plan before you code (see [Plan: Scope the repo health agent](#plan-scope-the-repo-health-agent-8-min)). Review the plan as a group; do not click **Build** unless you intend to let Cursor write code for you in **Build** or **Test**.
+- **Build + Test** — each section also includes an optional prompt so Cursor can implement the exercise instead of paste; that typically costs an Agent session per section. In a live session, **pair up**: one person pastes reference code, the other tries Cursor, or swap roles between sections.
+- **Deploy** — save one Agent chat to test your packaged skill in Cursor.
 
 You can mix approaches — paste some parts, delegate others. The reference code is always there to fall back on or to diff against Cursor's output.
 
@@ -78,7 +78,7 @@ You can mix approaches — paste some parts, delegate others. The reference code
 
 ## What this workshop teaches
 
-Many agent demos retrieve a metric and summarize it — users still ask *so what?* This workshop builds **intelligence agents**: tools that return auditable facts with context, plus reasoning rules for plausible *why* and honest confidence. The causal framework — Pearl's ladder, evidence tiers, pathway templates — is developed in [Part 2](#part-2--build-causal-reasoning-17-min) when you implement `analyze_causal_patterns`.
+Many agent demos retrieve a metric and summarize it — users still ask *so what?* This workshop builds **intelligence agents**: tools that return auditable facts with context, plus reasoning rules for plausible *why* and honest confidence. The causal framework — Pearl's ladder, evidence tiers, pathway templates — is developed in [Build: Causal reasoning](#build-causal-reasoning-17-min) when you implement `analyze_causal_patterns`.
 
 ### What you will have at the end
 
@@ -134,44 +134,25 @@ Traditional software (**SDLC**) is deterministic: the same input yields the same
 
 This workshop covers **plan through deploy** in 75 minutes, plus **evaluate** as the wrap-up. **Operate & monitor** is optional reading after the session.
 
-**Running behind?** Focus on Part 3 — that is where the agent comes alive. Parts 1–2 are the foundation; Part 4 is packaging what you already built. Skip the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
+**Running behind?** Focus on **Test** — that is where the agent comes alive. The two **Build** sections are the foundation; **Deploy** is packaging what you already built. Skip the optional [Operate & monitor appendix](#optional-operate--monitor-discussion-8-min) if you are short on time.
 
 
 | IBM ADLC phase        | Workshop section                  | What you produce                                                                           |
 | --------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
 | **Plan**              | Plan: Scope the repo health agent | Problem scope, success criteria, Cursor plan                                               |
-| **Build**             | Part 1 + Part 2                   | `tools.py` — facts, flags, causal evidence                                                 |
-| **Test**              | Part 3                            | `agent.py` — agent loop wired and smoke-tested                                             |
-| **Deploy**            | Part 4                            | Agent Skill (`SKILL.md` + scripts)                                                         |
-| **Evaluate**          | Compare: Causal vs naive agent    | Behavioral comparison + production architecture *(workshop label — not an IBM phase name)* |
+| **Build**             | Build: Data tools + Build: Causal reasoning | `tools.py` — facts, flags, causal evidence                                                 |
+| **Test**              | Test: Wire tools to Groq                    | `agent.py` — agent loop wired and smoke-tested                                             |
+| **Deploy**            | Deploy: Package as an Agent Skill           | Agent Skill (`SKILL.md` + scripts)                                                         |
+| **Evaluate**          | Evaluate: Causal vs naive agent             | Behavioral comparison + production architecture *(workshop label — not an IBM phase name)* |
 | **Operate & monitor** | Optional appendix (end of guide)  | Drift, accountability, compliance — after launch                                           |
-
-
-**Pre-workshop setup** ([Start here](#start-here--setup-and-session-prep-5-min)) is environment verification only — not an ADLC phase.
-
-**Why Evaluate comes after Deploy on the schedule:** Part 3 smoke-tests the agent during **Test**. The **Evaluate** section at the end is the deliberate payoff — side-by-side comparison after you have packaged the skill — so you leave with a clear picture of why tools + rules matter.
-
-**The four numbered parts** align to ADLC as: **Build** (Parts 1–2), **Test** (Part 3), **Deploy** (Part 4). Plan and Evaluate are separate sections that bookend the hands-on build.
-
-In 75 minutes we also touch five ADLC habits you can use on any agent project:
-
-
-| ADLC habit                      | What it means here                                                                                      |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Plan before you prompt**      | Align on the problem, success criteria, and data sources — use Cursor Plan mode                         |
-| **Separate data from judgment** | Python returns facts; the LLM interprets them (tools + orchestration, not prompt-only)                  |
-| **Build guardrails in**         | System prompts, tool boundaries, evidence tiers — designed in up front, not bolted on after demos break |
-| **Evaluate, don't just demo**   | Compare causal vs naive agents; production teams add benchmarks and regression tests                    |
-| **Package for reuse**           | Ship tools + rules as an Agent Skill — a first step toward deploying into everyday workflows            |
-
-
-Each section below calls out which ADLC phase you are in and what deliverable you are producing.
 
 ---
 
 ## Plan: Scope the repo health agent (8 min)
 
-**ADLC phase: Plan** — nail down what you are building, where facts end and judgment begins, then practice **Plan mode** in Cursor before any code.
+**plan** → build → test → deploy → operate → monitor
+
+Nail down what you are building, where facts end and judgment begins, then practice **Plan mode** in Cursor before any code.
 
 *~4 min on scope and the data-intelligence boundary, then ~4 min in Plan mode.*
 
@@ -186,9 +167,9 @@ This workshop builds a **repo health analyst** that pulls live GitHub metrics an
 
 | Piece          | What it does                                                                                   | Where you build it     |
 | -------------- | ---------------------------------------------------------------------------------------------- | ---------------------- |
-| **Data tools** | Pull live metrics, add benchmarks and flags, return causal pathway matches with evidence tiers | `tools.py` (Parts 1–2) |
-| **Agent loop** | Call tools, synthesize a narrative briefing                                                    | `agent.py` (Part 3)    |
-| **Packaging**  | Ship capability + interpretation rules for reuse                                               | Agent Skill (Part 4)   |
+| **Data tools** | Pull live metrics, add benchmarks and flags, return causal pathway matches with evidence tiers | `tools.py` (Build)     |
+| **Agent loop** | Call tools, synthesize a narrative briefing                                                    | `agent.py` (Test)    |
+| **Packaging**  | Ship capability + interpretation rules for reuse                                               | Agent Skill (Deploy)   |
 
 
 That table is the high-level scope for the session. Planning means turning it into a design: what each tool returns, what the LLM is allowed to infer, and how you will know the agent succeeded.
@@ -214,7 +195,7 @@ The [design patterns](#design-patterns-for-intelligence-agents-not-chatbots) abo
 
 - **Inputs:** GitHub `owner` + `repo` (e.g. `pallets/flask`)
 - **Outputs:** Structured tool results plus a narrative briefing the user can act on
-- **Success (target behavior):** The agent does not quote a metric unless a tool returned it; causal claims include an evidence tier and an alternative explanation (you verify this in [Evaluate](#compare-causal-vs-naive-agent-7-min))
+- **Success (target behavior):** The agent does not quote a metric unless a tool returned it; causal claims include an evidence tier and an alternative explanation (you verify this in [Evaluate](#evaluate-causal-vs-naive-agent-7-min))
 
 ---
 
@@ -230,7 +211,7 @@ You have the problem, scope, and boundary. Next step in ADLC is to turn that int
 4. Answer any clarifying questions Cursor asks (pick sensible defaults if you are unsure).
 5. When the plan appears, read it — especially which work belongs in `tools.py` vs. the LLM.
 
-**Do not click Build yet.** The learning goal is to **review the plan** against the scope and boundary above. Build switches to Agent mode and starts editing files — save that for [Option B](#option-b-let-cursor-write-it) in Parts 1–3 if you want.
+**Do not click Build yet.** The learning goal is to **review the plan** against the scope and boundary above. Build switches to Agent mode and starts editing files — save that for [Option B](#option-b-let-cursor-write-it) in **Build** or **Test** if you want.
 
 > **Facilitator tip:** See [Start here — step 3](#3-how-you-will-work-in-cursor) for how participants should budget Cursor AI. In a live session, demo Plan mode on one screen while the room discusses the plan. Pairs work too: one partner runs Plan mode, the other scores the plan against the boundary table above.
 
@@ -244,7 +225,7 @@ Before any code, produce a structured implementation plan that covers:
 1. Problem, inputs, outputs, and success criteria (measurable — e.g. no hallucinated metrics)
 2. Data layer (src/tools.py): what each tool returns — facts, flags, z-scores, evidence tiers only; explicitly what must NOT be returned (opinions, recommendations, severity labels)
 3. Intelligence layer: system prompt rules, evidence tiers, when to call which tool
-4. Files and order of work (Parts 1–4: tools → agent.py → Agent Skill)
+4. Files and order of work (Build → Test → Deploy)
 5. Risks and guardrails (overconfidence, correlation vs causation, token/API limits)
 
 Read the existing stubs in src/tools.py and the workshop structure in docs/workshop-guide.md for context.
@@ -260,35 +241,37 @@ With the plan open, check as a group (or with your partner):
 2. Are success criteria **testable** (not vague like "good answers")?
 3. What would you change before clicking **Build**?
 
-Optional: click **Save to workspace** on the plan file so you can reference it during Parts 1–4.
+Optional: click **Save to workspace** on the plan file so you can reference it during **Build**, **Test**, and **Deploy**.
 
 #### Connect to the rest of the workshop
 
 
 | Path                   | What you do                                                                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Default (Option A)** | Copy the working code from this guide in Parts 1–3 — compare your mental model to the plan you just reviewed                                                 |
-| **Option B**           | Return to your plan in Parts 1–3 and click **Build** on the relevant steps, or start a fresh Plan for each part — then diff Cursor's output against Option A |
+| **Default (Option A)** | Copy the working code from this guide in **Build** and **Test** — compare your mental model to the plan you just reviewed                                                 |
+| **Option B**           | Return to your plan in **Build** or **Test** and click **Build** on the relevant steps, or start a fresh Plan for each section — then diff Cursor's output against Option A |
 
 
 Either way, the plan is the contract. The code is the implementation.
 
 ---
 
-### How Parts 1–3 work
+### How Build and Test work
 
-Each part gives you two ways to implement the code:
+Each section gives you two ways to implement the code:
 
 - **Option A: Copy the code** — A complete, working code block you paste into `src/tools.py`. This gets you running immediately so you can focus on understanding.
-- **Option B: Let Cursor write it** — Copy the ready-made prompt for that part into Cursor chat (`Cmd+L` / `Ctrl+L`). Cursor will edit the file for you. Compare what it generates to the working code in Option A.
+- **Option B: Let Cursor write it** — Copy the ready-made prompt for that section into Cursor chat (`Cmd+L` / `Ctrl+L`). Cursor will edit the file for you. Compare what it generates to the working code in Option A.
 
 You can do both — paste the code first, then read the description and try Option B to see how Cursor's version compares. This is how you learn to evaluate AI-generated code against a known-good reference.
 
 ---
 
-## Part 1 · Build: Data tools with context (17 min)
+## Build: Data tools with context (17 min)
 
-**ADLC phase: Build** — implement the data layer with clear boundaries.
+plan → **build** → test → deploy → operate → monitor
+
+Implement the data layer with clear boundaries.
 
 **File:** `src/tools.py`  
 **Function:** `get_repo_health(owner, repo)`
@@ -482,20 +465,22 @@ You just defined the **contract** for your data layer. Every consumer of `get_re
 
 ---
 
-## Part 2 · Build: Causal reasoning (17 min)
+## Build: Causal reasoning (17 min)
 
-**ADLC phase: Build** — add structured evidence the LLM can reason over.
+plan → **build** → test → deploy → operate → monitor
+
+Add structured evidence the LLM can reason over.
 
 **File:** `src/tools.py` (same file)  
 **Functions:** `analyze_causal_patterns`, `_get_alternative`
 
 ### Why correlation is not enough
 
-Part 1 answered **what** is happening — metrics with baselines and flags. Part 2 asks **why**, but only from **observational** GitHub data: timelines, issue counts, contributor stats. You watch repos over time; you do not run a controlled experiment. When two trends move together in that setting, you have **association** — they co-occur. That is not the same as showing one caused the other.
+[Build: Data tools](#build-data-tools-with-context-17-min) answered **what** is happening — metrics with baselines and flags. This section asks **why**, but only from **observational** GitHub data: timelines, issue counts, contributor stats. You watch repos over time; you do not run a controlled experiment. When two trends move together in that setting, you have **association** — they co-occur. That is not the same as showing one caused the other.
 
 **Why not?** Because of **confounding**: you often cannot tell whether A caused B, or whether something else explains both. Commits fall while a maintainer steps back — the maintainer may have driven the drop, or a holiday quarter, a platform outage, or a scope shift could explain the same pattern. Until you can rule out those alternatives, any *why* claim stays **unidentified**, no matter how convincing it sounds.
 
-LLMs will narrate a *why* anyway — fluently, from thin evidence. Part 2 does not solve causal identification on GitHub logs; it **structures** the reasoning so the agent stays honest. You will build **pathway templates** (hypothesized mechanisms), require **competing explanations** on every match, and label **evidence tiers** (how strong the claim is). The sections below define that framework; then you implement it in `analyze_causal_patterns`.
+LLMs will narrate a *why* anyway — fluently, from thin evidence. This **Build** section does not solve causal identification on GitHub logs; it **structures** the reasoning so the agent stays honest. You will build **pathway templates** (hypothesized mechanisms), require **competing explanations** on every match, and label **evidence tiers** (how strong the claim is). The sections below define that framework; then you implement it in `analyze_causal_patterns`.
 
 ### Pearl's ladder — three types of "why" questions
 
@@ -504,7 +489,7 @@ LLMs will narrate a *why* anyway — fluently, from thin evidence. Part 2 does n
 
 | Rung                  | Question                | Example                                                         | This workshop                                              |
 | --------------------- | ----------------------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
-| **1. Association**    | What co-occurs?         | "Ice cream sales and drowning deaths both rise in summer"       | **Yes** — Parts 1–2 use observational GitHub data only     |
+| **1. Association**    | What co-occurs?         | "Ice cream sales and drowning deaths both rise in summer"       | **Yes** — both **Build** sections use observational GitHub data only     |
 | **2. Intervention**   | What if we *do* X?      | "If we run the ad campaign, will sales go up?"                  | **No** — needs experiments or special study designs        |
 | **3. Counterfactual** | What if X had differed? | "Would this patient have recovered if they had taken the drug?" | **No** — needs a full structural model of cause and effect |
 
@@ -541,7 +526,7 @@ On rung 1, not all observational claims are equally supported. This workshop use
 
 ### The methodology — what you will build
 
-Part 2 implements a four-step process the agent will use in Part 3:
+This section implements a four-step process the agent will use in **Test**:
 
 1. **Hypothesize** — Define **pathway templates** in `CAUSAL_PATHWAYS`: plain-English stories of how decline might happen (e.g. maintainer leaves → fewer contributors).
 2. **Match** — `analyze_causal_patterns` checks whether repo data fits signals in each template. This is **pattern matching**, not proof.
@@ -553,25 +538,25 @@ That is **abductive** reasoning: the best-fitting story under constraints — no
 
 | What you build                  | Role in the process                         |
 | ------------------------------- | ------------------------------------------- |
-| `CAUSAL_PATHWAYS` (Part 2)      | Hypothesized mechanism templates            |
+| `CAUSAL_PATHWAYS` (causal reasoning) | Hypothesized mechanism templates            |
 | `analyze_causal_patterns`       | Pattern match against live GitHub data      |
 | `alternative_explanation`       | Competing story for every pathway           |
 | Evidence tier in tool output    | Explicit strength label for the LLM to cite |
-| Contextualized metrics (Part 1) | Facts with baselines — inputs to matching   |
+| Contextualized metrics (data tools) | Facts with baselines — inputs to matching   |
 
 
-**Extension:** See [Beyond rung 1](#beyond-rung-1--discussion) at the end of Part 2 for how you would build toward intervention and counterfactual claims.
+**Extension:** See [Beyond rung 1](#beyond-rung-1--discussion) at the end of this section for how you would build toward intervention and counterfactual claims.
 
 ### Two ways to implement
 
-Same choice as Part 1:
+Same choice as [Build: Data tools](#build-data-tools-with-context-17-min):
 
 1. **Option A: Copy the code** — Paste the working code below into `src/tools.py`.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-1) and copy the prompt into Cursor chat.
 
 ### Option A: The code
 
-Still in `src/tools.py`, replace the `analyze_causal_patterns` and `_get_alternative` stubs with the code below. Paste it after the `_classify_trend` function you added in Part 1. You also need to add the `CAUSAL_PATHWAYS` data structure — paste it between `_classify_trend` and `analyze_causal_patterns`:
+Still in `src/tools.py`, replace the `analyze_causal_patterns` and `_get_alternative` stubs with the code below. Paste it after the `_classify_trend` function you added in [Build: Data tools](#build-data-tools-with-context-17-min). You also need to add the `CAUSAL_PATHWAYS` data structure — paste it between `_classify_trend` and `analyze_causal_patterns`:
 
 ```python
 CAUSAL_PATHWAYS = [
@@ -733,7 +718,7 @@ def _get_alternative(pathway_id: str) -> str:
 
 ### Option B: Let Cursor write it
 
-1. Open `src/tools.py` in Cursor (your Part 1 functions should already be in place).
+1. Open `src/tools.py` in Cursor (your data-tools functions should already be in place).
 2. Press `Cmd+L` (macOS) or `Ctrl+L` (Windows) to open chat.
 3. Copy the entire prompt below and paste it into chat. Press Enter.
 4. Review the changes before accepting — make sure it adds `CAUSAL_PATHWAYS` and implements `analyze_causal_patterns` and `_get_alternative`.
@@ -741,7 +726,7 @@ def _get_alternative(pathway_id: str) -> str:
 **Cursor prompt (copy and paste):**
 
 ```
-Implement Part 2 in src/tools.py: CAUSAL_PATHWAYS, analyze_causal_patterns, and _get_alternative.
+Implement the causal-reasoning **Build** section in src/tools.py: CAUSAL_PATHWAYS, analyze_causal_patterns, and _get_alternative.
 
 Replace the NotImplementedError stubs. Add CAUSAL_PATHWAYS after _classify_trend with exactly two pathways:
 
@@ -798,7 +783,7 @@ The function returns evidence, not conclusions. It does **not** pick a "winner" 
 - Pathway 001: seasonal slowdown (holidays, summer)
 - Pathway 002: intentional stability in a mature project
 
-### Evidence tiers (reminder for Part 3)
+### Evidence tiers (reminder for Test)
 
 Your tools return **Tier 2** evidence. When the agent narrates causal claims, the system prompt should require naming the tier and including the alternative — and should not imply statistical proof or intervention-level certainty. Compliance is something you **evaluate**, not something Python enforces.
 
@@ -865,9 +850,11 @@ The agent should still **name the assumptions** behind any counterfactual. Refus
 
 ---
 
-## Part 3 · Test: Wire tools to Groq (13 min)
+## Test: Wire tools to Groq (13 min)
 
-**ADLC phase: Test** — connect tools to the LLM, run the agent loop, and smoke-test behavior.
+plan → build → **test** → deploy → operate → monitor
+
+Connect tools to the LLM, run the agent loop, and smoke-test behavior.
 
 **File:** Create `src/agent.py`
 
@@ -879,11 +866,11 @@ An **agent loop:**
 User question → LLM decides which tools to call → your Python runs → LLM synthesizes answer
 ```
 
-Plus a **naive agent** with no tools — for comparison in [Compare](#compare-causal-vs-naive-agent-7-min).
+Plus a **naive agent** with no tools — for comparison in [Evaluate](#evaluate-causal-vs-naive-agent-7-min).
 
 ### Two ways to implement
 
-Same choice as Parts 1 and 2:
+Same choice as the **Build** sections:
 
 1. **Option A: Copy the code** — Paste the full working file below.
 2. **Option B: Let Cursor write it** — Skip to [Option B](#option-b-let-cursor-write-it-2) and copy the prompt into Cursor chat.
@@ -1154,7 +1141,7 @@ If you chose Option A, read through this to understand what you pasted. If you c
 
 **Tool function map (**`TOOL_FUNCTIONS`**).** A dictionary mapping tool name strings to the actual Python functions.
 
-**System prompt (**`SYSTEM_PROMPT`**).** This is the part where you decide how the agent should behave. Think about what you learned in Parts 1 and 2: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
+**System prompt (**`SYSTEM_PROMPT`**).** This is where you decide how the agent should behave. Think about what you learned in both **Build** sections: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
 
 **Agent loop (**`run_agent`**).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages through `groq_chat` with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use `model=MODEL`. Print each tool call so you can see what happened.
 
@@ -1185,15 +1172,17 @@ uv run src/agent.py "Should I contribute to psf/requests?"
 
 ### ADLC test note
 
-You just **smoke-tested** the agent loop — tool calls fire, metrics come back with context. That is the **Test** phase: integration works. The **Evaluate** payoff is in [Compare: Causal vs naive agent](#compare-causal-vs-naive-agent-7-min), where you compare grounded vs ungrounded output.
+You just **smoke-tested** the agent loop — tool calls fire, metrics come back with context. That is the **Test** phase: integration works. The **Evaluate** payoff is in [Evaluate: Causal vs naive agent](#evaluate-causal-vs-naive-agent-7-min), where you compare grounded vs ungrounded output.
 
 Your pipeline mirrors a staged production design: `get_repo_health` (retrieve facts) → `analyze_causal_patterns` (structured evidence) → LLM (narrative only after data is in hand).
 
 ---
 
-## Part 4 · Deploy: Package as an Agent Skill (8 min)
+## Deploy: Package as an Agent Skill (8 min)
 
-**ADLC phase: Deploy** — move capabilities from prototype into something others can use reliably.
+plan → build → test → **deploy** → operate → monitor
+
+Move capabilities from prototype into something others can use reliably.
 
 Deployment connects your tools and reasoning rules to the environment where people actually work — not just proving the prototype runs. Packaging an [Agent Skill](https://agentskills.io) ships capability and rules together (`SKILL.md` + `scripts/tools.py`), decoupled from the core agent prompt — the same modular pattern production teams use for skills-based agents.
 
@@ -1297,7 +1286,7 @@ Present findings as a narrative briefing with these sections:
 4. **Assessment** — Your synthesis based on all evidence
 ````
 
-The `description` field is how Cursor decides when to activate your skill — write it carefully. The description is injected into the Cursor system prompt. You can edit the wording later; this version matches the tools you built in Parts 1–2. You can also invoke the skill yourself: in chat, type `/` and choose **repo-health-analyst** (or type `/repo-health-analyst`).
+The `description` field is how Cursor decides when to activate your skill — write it carefully. The description is injected into the Cursor system prompt. You can edit the wording later; this version matches the tools you built in **Build**. You can also invoke the skill yourself: in chat, type `/` and choose **repo-health-analyst** (or type `/repo-health-analyst`).
 
 #### 2. Copy `src/tools.py` to the skill
 
@@ -1341,7 +1330,7 @@ Open chat (**Cmd+L** / **Ctrl+L**) and ask:
 
 This is how you confirm the skill works *inside* Cursor — chat activates it. Cursor **may** load your skill, run your scripts, and follow your rules. If it does not, confirm the skill path and `description` in `SKILL.md`.
 
-**No chat quota left?** Part 4 is still complete once `SKILL.md` and `scripts/tools.py` are in place — you packaged the skill even if you could not demo it in chat.
+**No chat quota left?** **Deploy** is still complete once `SKILL.md` and `scripts/tools.py` are in place — you packaged the skill even if you could not demo it in chat.
 
 ### What you packaged
 
@@ -1364,11 +1353,13 @@ Version your skill (`metadata.version` in frontmatter) — the same discipline a
 
 ---
 
-## Compare: Causal vs naive agent (7 min)
+## Evaluate: Causal vs naive agent (7 min)
 
-**ADLC phase: Evaluate** — behavioral comparison made visible, then map what you built to production.
+plan → build → test → deploy → **evaluate** → operate → monitor
 
-This is the payoff for Part 3. You built two agents on the same query; now compare them side by side and close with how the same architecture scales beyond the workshop.
+Behavioral comparison made visible, then map what you built to production. *(Evaluate is a workshop label — not an IBM ADLC phase name.)*
+
+This is the payoff for **Test**. You built two agents on the same query; now compare them side by side and close with how the same architecture scales beyond the workshop.
 
 ### Step 1 — Run both agents
 
@@ -1456,7 +1447,7 @@ What you built today maps to a production stack — same layers, different packa
 | Deploy                           | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing)         |
 
 
-**Agent runtime** — the orchestration row above. In Part 3, that is your `run_agent` loop: it calls the Groq API each turn, reads tool-call requests from the model, runs your Python functions, and appends results back into the conversation until the model returns a final answer. In production, the runtime is the same idea at larger scale — often a service or framework (LangGraph, custom Python, Cursor's agent host) that:
+**Agent runtime** — the orchestration row above. In **Test**, that is your `run_agent` loop: it calls the Groq API each turn, reads tool-call requests from the model, runs your Python functions, and appends results back into the conversation until the model returns a final answer. In production, the runtime is the same idea at larger scale — often a service or framework (LangGraph, custom Python, Cursor's agent host) that:
 
 - **Invokes the LLM API** — sends messages, receives completions (inference happens on the provider's side; the runtime is the client)
 - **Executes the tool loop** — parse tool calls, dispatch to MCP or local functions, feed results back
@@ -1471,13 +1462,13 @@ The runtime is the **conductor**, not the musician: it does not host model weigh
 - **Orchestration** still needs an agent loop, system prompt, and routing rules ("call health first, then causal if flags fire").
 - **Skills** and MCP are complementary — a Skill carries *how to interpret* results; MCP carries *how to invoke* the tools.
 
-**RAG vs Skills** — both can add context to the prompt, but they solve different problems. **Skills** (Part 4) package curated **capability + rules** — when to activate, which scripts to run, how to interpret output. **RAG** searches a **large or fast-changing doc corpus** per query (policies, wikis, past reports). Use RAG when that knowledge is too big or dynamic to maintain in `SKILL.md`; use Skills when you need a versioned workflow with executable tools. RAG **complements** live API tools — it does not replace `tools.py` or evidence tiers; retrieved text can still be associative.
+**RAG vs Skills** — both can add context to the prompt, but they solve different problems. **Skills** (**Deploy**) package curated **capability + rules** — when to activate, which scripts to run, how to interpret output. **RAG** searches a **large or fast-changing doc corpus** per query (policies, wikis, past reports). Use RAG when that knowledge is too big or dynamic to maintain in `SKILL.md`; use Skills when you need a versioned workflow with executable tools. RAG **complements** live API tools — it does not replace `tools.py` or evidence tiers; retrieved text can still be associative.
 
 **Evaluation harness** — a set of repeatable checks teams use to judge whether an agent still produces trustworthy, grounded output after changes to the prompt, model, skill, or tools. The idea is similar to regression tests for code, but the behavior is probabilistic — so cases and assertions often focus on tool use and grounding rather than an exact string match. In this workshop, Step 3 is a lightweight manual version of that pattern; in production, teams often automate it as a scripted suite they can rerun in CI.
 
 - **Cases** — a prompt, repo, and expected tool calls (here: causal vs naive on the same query)
 - **Assertions** — checks on the final answer, such as citing tool output and stating tier + alternative (here: the three Step 3 questions)
-- **Golden tool tests** — known repos with expected flags (here: Part 1–2 checkpoints)
+- **Golden tool tests** — known repos with expected flags (here: **Build** checkpoints)
 - **When to rerun** — commonly after prompt, model, or skill changes
 - **What to test where** — deterministic flag and metric logic often belongs in `tools.py`; behavioral checks (e.g. skipped tools or ungrounded numbers) may need the full agent loop
 
@@ -1492,9 +1483,11 @@ The runtime is the **conductor**, not the musician: it does not host model weigh
 
 ## Optional: Operate & monitor discussion (8 min)
 
-*Skip this section in a 75-minute session unless you have extra time. The [Compare section](#compare-causal-vs-naive-agent-7-min) is the recommended wrap-up.*
+*Skip this section in a 75-minute session unless you have extra time. The [Evaluate section](#evaluate-causal-vs-naive-agent-7-min) is the recommended wrap-up.*
 
-**ADLC phase: Operate & monitor** — what happens after deploy once the agent is live.
+plan → build → test → deploy → **operate** → **monitor**
+
+What happens after deploy once the agent is live.
 
 ADLC does not end at deploy. Operate-and-monitor practices track latency, task completion, tool failures, and model drift, plus audits for permissions and compliance. Production agents also need visible reasoning (sources, not just answers), clear accountability (data owners maintain guidance; users own decisions), and access control that inherits existing permissions.
 
@@ -1531,12 +1524,12 @@ causal-agent-workshop/
 │   │   └── agent-comparison.canvas.tsx  # Wrap-up comparison (install to Cursor canvases/)
 │   └── workshop-guide.md              # This guide (ADLC-aligned)
 ├── src/
-│   ├── agent.py                       # ← you create in Part 3
+│   ├── agent.py                       # ← you create in Test
 │   ├── config.py                      # Groq model selection (GROQ_MODEL)
 │   ├── list_models.py                 # Lists available Groq models
-│   ├── tools.py                       # Parts 1 + 2 (you implement these)
+│   ├── tools.py                       # Build (you implement these)
 │   └── verify.py                      # Setup verification
-├── .cursor/skills/                    # ← you create in Part 4
+├── .cursor/skills/                    # ← you create in Deploy
 │   └── repo-health-analyst/
 │       ├── scripts/
 │       │   └── tools.py
@@ -1558,14 +1551,14 @@ Open the terminal in Cursor from the **project root**, then run these **one at a
 # Verify setup
 uv run src/verify.py
 
-# After completing Parts 1–2 — test health metrics
+# After completing Build — test health metrics
 uv run --directory src python -c "from tools import get_repo_health; import json; print(json.dumps(get_repo_health('pallets','flask'), indent=2, default=str))"
 
-# After completing Part 3 — run the causal agent
+# After completing Test — run the causal agent
 uv run src/agent.py
 uv run src/agent.py "Analyze the health of facebook/react"
 
-# After completing Part 4 — optional: run skill scripts from terminal
+# After completing Deploy — optional: run skill scripts from terminal
 # uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health pallets flask
 # uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal pallets flask
 ```

@@ -770,10 +770,6 @@ uv run --directory src python -c "from tools import analyze_causal_patterns; imp
 
 **Success:** `pathways_checked: 2` with `observations` for each pathway.
 
-### ADLC build note
-
-You are **building guardrails into the data layer** — alternatives and evidence tiers are not optional niceties; they prevent overconfident agents. Your tools return Tier 2 evidence with explicit alternatives so the agent in **Test** has the structured facts it needs to qualify its claims honestly (compliance is something you evaluate in the prompt and output, not something Python enforces).
-
 ### Beyond rung 1 — discussion
 
 This workshop stays on Pearl's **association rung** — observational GitHub data, pattern matching, Tier 2 evidence. Rungs 2 and 3 need different **data**, **design**, and **tools**, but the same architecture: facts in `tools.py`, strength labels and alternatives in the output, judgment in the LLM.
@@ -788,14 +784,12 @@ To support intervention claims, the agent needs evidence from a **change you can
 | **Randomized experiment**                     | Assign repos to a maintainer-onboarding program; compare outcomes                                                                          | A tool that reads experiment assignment + pre/post metrics                                                            |
 | **Natural experiment**                        | A maintainer returns after a long absence; compare activity before vs. after                                                               | Event-study or before/after tool with a clear intervention date                                                       |
 | **Quasi-experiment (diff-in-diff, matching)** | Repos that joined a foundation vs. matched peers; or a platform policy change with pre/post trends                                         | A tool returning `ate`, `confidence_interval`, and design assumptions (e.g. parallel trends)                          |
-| **Causal ML (DML, causal forests)**           | Thousands of repos with many confounders — estimate effect of adding `CODEOWNERS`, or which profiles benefit from a release cadence change | Fitted model in a tool returning `ate` or `cate_by_segment`, `method`, and assumptions — not a plain predictive score |
+| **Causal ML (DML, causal forests)**           | Thousands of repos with many confounders — estimate effect of an action on repos matching a target profile (e.g. adding `CODEOWNERS`) | Fitted model in a tool returning `ate` or `cate` (effect for this repo's cohort), `method`, and assumptions |
 
 
 > **Diff-in-diff (footnote):** Compare how much the outcome *changed* in a treated group vs. a control group over the same period. Mental model: `(after − before)_treated − (after − before)_control` — an estimate of the intervention effect if both groups would have trended in parallel without the action.
 
-> **Causal ML (footnote):** Traditional ML: given repo **features** (stars, contributors, etc.), **predict** outcome *Y*. Causal ML: given a study **design** (experiment, diff-in-diff, matching) *and* features, **estimate the effect of action *X* on outcome *Y*** — Pearl's **do(X) on Y**: what happens if we *do* something, not just what co-occurs. ML flexes the math; the design keeps the answer causal.
-
-The agent should still **label the evidence tier** and refuse intervention language unless a tool returns an **identified estimate** (classical or ML-backed) — not pathway pattern match alone.
+> **Causal ML (footnote):** Traditional ML predicts outcome *Y* from repo features (prone to correlation traps). Causal ML estimates the **effect of an action** on repos matching a target profile—controlling for dozens of confounding variables that make simple "twin repo" matching impossible. It estimates the **conditional treatment effect** (Pearl's **do(X)** for this cohort): *"For repos that look like ours, what is the expected lift from action X?"* ML controls for the confounders; the causal design isolates the effect.
 
 **Rung 3 — Counterfactual ("What if X had been different?")**
 
@@ -806,11 +800,9 @@ To support counterfactual claims, the agent needs a **modeled answer about a wor
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | **Historical baseline scenario** | When the top maintainer was last active, commits averaged 12/week; now 4/week — gap if activity had stayed at the prior level                                           | A tool returning `observed`, `baseline`, `gap`, and `assumption`                                                                        |
 | **Matched-repo comparison**      | A similar project without maintainer loss kept velocity flat while this repo dropped                                                                                    | A cohort tool comparing trajectories — partial counterfactual ("what happened where X did not occur")                                   |
-| **Synthetic control**            | One repo loses a maintainer; build a counterfactual path from weighted peer repos that did not                                                                          | A tool returning `observed_vs_synthetic`, `donor_weights`, and `assumptions`                                                            |
+| **Synthetic control**            | Build a custom "clone" of this specific repo by weighting a pool of peer repos that didn't lose a maintainer, tracking the path this repo would have taken | A tool returning `observed_vs_synthetic`, `donor_weights`, and `assumptions`                                                            |
 | **Structural model (SCM / DAG)** | Pathway 001 as a **DAG**: maintainer activity → review latency → contributors → commits; estimate links, then query hypotheticals (the graph makes assumptions visible) | A tool that takes a hypothetical input (e.g. maintainer active) and returns a **predicted outcome range** plus stated graph assumptions |
 
-
-The agent should still **name the assumptions** behind any counterfactual. Refuse claims like "commits would have stayed flat if the maintainer had not left" unless a tool returns a **counterfactual estimate with its assumption set** — not pathway match or narrative alone.
 
 **What stays the same**
 

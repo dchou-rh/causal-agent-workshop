@@ -743,7 +743,9 @@ def analyze_causal_patterns(owner: str, repo: str) -> dict:
             "adjusted_confidence": round(
                 pathway["confidence_base"] * (nodes_detected / max(total_nodes, 1)), 2
             ),
-            "alternative_explanation": _get_alternative(pathway["id"]),
+            "alternative_explanation": (
+                _get_alternative(pathway["id"]) if nodes_detected > 0 else None
+            ),
         })
 
     return {
@@ -804,11 +806,11 @@ Replace the NotImplementedError stubs. Add CAUSAL_PATHWAYS after _classify_trend
 analyze_causal_patterns(owner, repo) must:
 - For pathway 001: check top contributor's last active week; compare unique contributors in the recent 13 weeks vs the prior 13 weeks
 - For pathway 002: check days since the latest release (or flag if no releases)
-- For each pathway, return: pathway name, mechanism, observations (per node with detected + detail), nodes_detected, nodes_checked, match_strength, evidence_tier, adjusted_confidence (confidence_base × match_strength), alternative_explanation
+- For each pathway, return: pathway name, mechanism, observations (per node with detected + detail), nodes_detected, nodes_checked, match_strength, evidence_tier, adjusted_confidence (confidence_base × match_strength), alternative_explanation (competing explanation if nodes detected, else None)
 - Return a top-level dict with repository, pathways_checked, results, retrieved_at, and methodology noting Tier 2 pattern matching
 - Return evidence only — do NOT pick which pathway "matters most"
 
-_get_alternative(pathway_id) must return a competing explanation:
+_get_alternative(pathway_id) returns a competing explanation for detected pathways:
 - pathway_001: seasonal slowdown (holidays, summer)
 - pathway_002: intentional stability in a mature project
 
@@ -837,11 +839,11 @@ Each pathway includes an `id`, `name`, `mechanism`, `nodes` (what the code actua
 | 002     | How many days since the last release                                                                                                  |
 
 
-For each pathway, it builds a result with: per-node `observations` (detected or not, with detail strings), counts of `nodes_detected` vs. `nodes_checked`, a `match_strength` ratio, the `evidence_tier`, an `adjusted_confidence` (base confidence scaled by match strength), and an `alternative_explanation`.
+For each pathway, it builds a result with: per-node `observations` (detected or not, with detail strings), counts of `nodes_detected` vs. `nodes_checked`, a `match_strength` ratio, the `evidence_tier`, an `adjusted_confidence` (base confidence scaled by match strength), and an `alternative_explanation` (when nodes are detected).
 
 The function returns evidence, not conclusions. It does **not** pick a "winner" pathway — that is the LLM's job.
 
-`_get_alternative(pathway_id)` returns a competing explanation for each pathway. Every causal claim must acknowledge at least one alternative:
+`_get_alternative(pathway_id)` returns a competing explanation for each pathway when signals are detected. Every causal claim must acknowledge at least one alternative:
 
 - Pathway 001: seasonal slowdown (holidays, summer)
 - Pathway 002: intentional stability in a mature project
@@ -952,6 +954,7 @@ import sys
 
 from dotenv import load_dotenv
 from groq import Groq
+# from langfuse import get_client, observe
 
 from config import get_groq_model
 from tools import get_repo_health, analyze_causal_patterns
@@ -1041,7 +1044,11 @@ RULES YOU MUST FOLLOW:
    historical average" is required.
 
 4. For every causal claim, state the evidence tier (1-4) and acknowledge
-   at least one alternative explanation.
+   at least one alternative explanation. For detected pathways or observed
+   symptoms, weigh the hypothesized mechanism against plausible competing
+   explanations (e.g. intentional API stability, seasonal variation) before
+   drawing conclusions. Do not cite alternative explanations for pathways
+   that were not detected.
 
 5. When your evidence is Tier 1-2 (temporal or pattern), say "Based on
    observed patterns..." — NOT "Data proves..." or "This shows..."
@@ -1050,7 +1057,20 @@ RULES YOU MUST FOLLOW:
    of raw data.
 """
 
-> **Note:** `MUST` / `Never` in `SYSTEM_PROMPT` are **instructions to the model**, not guarantees enforced by Python. You still evaluate compliance in the Compare section.
+# Note: MUST / Never in SYSTEM_PROMPT are instructions to the model, not
+# guarantees enforced by Python. You still evaluate compliance in Compare.
+
+# Optional Langfuse tracing (ADLC operate/monitor). Leave commented for the workshop.
+# To enable: uncomment the langfuse import above, the three @observe lines, and flush() below.
+# Env: LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST
+#
+# @observe(name="groq-chat", as_type="generation")
+def groq_chat(**kwargs):
+    return client.chat.completions.create(**kwargs)
+
+
+# Agent loop — LLM decides which tools to call, Python runs them, LLM synthesizes
+# @observe(name="causal-agent")
 def run_agent(user_message: str) -> str:
     """Run the full agent loop: user -> LLM -> tools -> LLM -> response."""
     messages = [
@@ -1059,7 +1079,7 @@ def run_agent(user_message: str) -> str:
     ]
 
     while True:
-        response = client.chat.completions.create(
+        response = groq_chat(
             model=MODEL,
             messages=messages,
             tools=TOOLS,
@@ -1086,9 +1106,10 @@ def run_agent(user_message: str) -> str:
 
 
 # Naive agent — no tools, no rules, for comparison
+# @observe(name="naive-agent")
 def run_naive_agent(user_message: str) -> str:
     """A naive agent with no tools and no reasoning rules — for comparison."""
-    response = client.chat.completions.create(
+    response = groq_chat(
         model=MODEL,
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -1110,6 +1131,7 @@ if __name__ == "__main__":
     print("NAIVE AGENT (no tools, no rules)")
     print("=" * 60)
     print(run_naive_agent(query))
+    # get_client().flush()
 ```
 
 
@@ -1136,6 +1158,9 @@ Imports and setup:
 - client = Groq(api_key=os.environ["GROQ_API_KEY"])
 - MODEL = get_groq_model()  # do not hardcode a model name
 
+Include this commented-out Langfuse import (leave it commented; do not import langfuse as live code):
+- # from langfuse import get_client, observe
+
 Define TOOLS with two Groq function schemas: get_repo_health and analyze_causal_patterns.
 Each needs owner and repo (required strings). Descriptions must explain what the tool returns AND state it does NOT return opinions or recommendations.
 
@@ -1150,20 +1175,30 @@ Define SYSTEM_PROMPT with these rules:
 6. For Tier 1-2 evidence, say "Based on observed patterns..." not "Data proves..."
 7. Structure the response as a narrative briefing, not a bullet dump
 
+Add a thin Groq wrapper (live) so you can later put @observe on it — you cannot decorate an inline method call:
+- def groq_chat(**kwargs): return client.chat.completions.create(**kwargs)
+- Above it, commented: Optional Langfuse tracing (ADLC operate/monitor). Leave commented for the workshop.
+- Commented: To enable: uncomment the langfuse import, the three @observe lines, and flush() below.
+- Commented: Env: LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST
+- Commented decorator: @observe(name="groq-chat", as_type="generation")
+
 Implement run_agent(user_message):
-- Agent loop: send messages to Groq with tools=TOOLS and model=MODEL
+- Commented decorator: @observe(name="causal-agent")
+- Agent loop: send messages via groq_chat with tools=TOOLS and model=MODEL
 - If tool_calls returned, execute each function, append results, and loop
 - Print each tool call like: [Calling get_repo_health({'owner': 'pallets', 'repo': 'flask'})]
 - Return final text response when no more tool calls
 
 Implement run_naive_agent(user_message):
-- Same model, system prompt "You are a helpful assistant.", no tools
+- Commented decorator: @observe(name="naive-agent")
+- Same model via groq_chat, system prompt "You are a helpful assistant.", no tools
 
 if __name__ == "__main__":
 - Query from sys.argv or default to "Analyze the health of the pallets/flask repository."
 - Print causal agent output, then naive agent output, with clear section headers
+- Commented: get_client().flush()
 
-Match patterns used elsewhere in this project. Do not add new dependencies.
+Match patterns used elsewhere in this project. Do not add new dependencies. Leave all Langfuse lines commented.
 ```
 
 
@@ -1180,9 +1215,11 @@ If you chose Option A, read through this to understand what you pasted. If you c
 
 **System prompt (**`SYSTEM_PROMPT`**).** This is the part where you decide how the agent should behave. Think about what you learned in Parts 1 and 2: the data layer returns facts with context, evidence tiers, and alternative explanations. The system prompt should tell the LLM how to use all of that responsibly. Consider: When should the agent call each tool? How should it present numbers? How should it handle uncertainty? What should it never do?
 
-**Agent loop (**`run_agent`**).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages to Groq with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use `model=MODEL`. Print each tool call so you can see what happened.
+**Agent loop (**`run_agent`**).** Takes a user message, puts it in a messages list with the system prompt, and loops: send messages through `groq_chat` with `tools=TOOLS`, if the model requests tool calls then run each Python function and append the results to messages, otherwise return the text response. Use `model=MODEL`. Print each tool call so you can see what happened.
 
-**Naive agent (**`run_naive_agent`**).** Same model, but with a generic system prompt ("You are a helpful assistant") and no tools. This exists for comparison — to show the difference between an agent with structured data and one without.
+**Naive agent (**`run_naive_agent`**).** Same model via `groq_chat`, but with a generic system prompt ("You are a helpful assistant") and no tools. This exists for comparison — to show the difference between an agent with structured data and one without.
+
+**Optional tracing.** You cannot put `@observe` on an inline method call, so `groq_chat` is a three-line wrapper around `client.chat.completions.create`. The Langfuse import, `@observe` decorators, and `get_client().flush()` are commented out — leave them that way for the workshop; the agent does not need Langfuse to run. To turn tracing on later: set `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_HOST` in `.env`, then uncomment those lines. In Langfuse, open the nested **groq-chat** generation — the model's `tool_calls` are on that span's output.
 
 **Main block.** When run from the command line, take an optional query argument (default: "Analyze the health of the pallets/flask repository"), run both agents on the same query, and print their outputs side by side.
 
@@ -1253,11 +1290,12 @@ The file starts with **YAML frontmatter** — metadata between `---` lines at th
 
 - `name` identifies the skill in Cursor's skill list.
 - `description` tells Cursor when to suggest this skill — it matches against what you type in chat.
-- `compatibility` lists what must be installed for the skill to work.
+
+Put environment requirements you would like to check in the **markdown body**.
 
 **Copy and paste** the entire block below into `SKILL.md`:
 
-```markdown
+````markdown
 ---
 name: repo-health-analyst
 description: >
@@ -1266,10 +1304,6 @@ description: >
   repo is well-maintained, investigate contributor risk, or decide whether to
   adopt or contribute to a project. Combines quantitative metrics with causal
   pathway analysis.
-compatibility: Requires Python 3.11+, uv, and environment variables GITHUB_TOKEN and GROQ_API_KEY.
-metadata:
-  author: workshop-participant
-  version: "1.0"
 ---
 
 ## What This Skill Does
@@ -1277,6 +1311,15 @@ metadata:
 Analyzes GitHub repository health by running two data tools and synthesizing
 results with causal reasoning. The tools return structured data with indicator
 flags — the agent provides interpretation and judgment.
+
+## Prerequisites
+
+Before running the scripts, confirm:
+- Python 3.11+ and `uv` are available
+- `.env` has `GITHUB_TOKEN` (and `GROQ_API_KEY` if you call Groq)
+
+If a command fails because a token or tool is missing, stop and tell the user
+what to install or set. Do not guess metrics.
 
 ## How to Use
 
@@ -1286,28 +1329,31 @@ flags — the agent provides interpretation and judgment.
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py health <owner> <repo>
 ```
 
-1. If any indicator flags are concerning (`is_declining`, `has_bus_factor_risk`,
-  `has_issue_backlog`), run the causal analysis:
+2. If any indicator flags are concerning (`is_declining`, `has_bus_factor_risk`,
+   `has_issue_backlog`), run the causal analysis:
 
 ```bash
 uv run python .cursor/skills/repo-health-analyst/scripts/tools.py causal <owner> <repo>
 ```
 
-1. Synthesize the results following these rules:
+3. Synthesize the results following these rules:
 
 ### Rules for Interpretation
 
 - **Never present a number without its reference context.** "47 commits" is
-banned. "47 commits/week (z = -1.2 vs. 52-week self-history)" is required.
+  banned. "47 commits/week (z = -1.2 vs. 52-week self-history)" is required.
 - **Every causal claim states its evidence tier:**
   - Tier 1 (temporal): "Following X, we observed Y..."
   - Tier 2 (pattern): "This matches a pattern seen in similar projects..."
   - Tier 3 (peer comparison): "Peer projects without X didn't show Y..."
   - Tier 4 (statistical): "Across N projects, X predicts Y (p < 0.05)..."
-- **Every causal claim acknowledges an alternative explanation.** The tool
-returns one — include it.
+- **Every causal claim acknowledges an alternative explanation.** For any detected
+  pathway or observed symptom, evaluate both the hypothesized mechanism and plausible
+  competing explanations (e.g. intentional API stability, seasonal variation, or scope
+  shifts) before drawing conclusions. Do not cite alternative explanations for pathways
+  that were not detected.
 - **Data functions return facts. You provide judgment.** The tool says
-`is_declining: true`. You decide whether that matters and why.
+  `is_declining: true`. You decide whether that matters and why.
 - **Structure output as a narrative briefing**, not a bullet-point data dump.
 
 ## Output Format
@@ -1318,11 +1364,9 @@ Present findings as a narrative briefing with these sections:
 2. **Health Assessment** — Metrics with reference context
 3. **Causal Analysis** — Pathway matches with evidence tiers and alternatives
 4. **Assessment** — Your synthesis based on all evidence
+````
 
-```
-
-The `description` field is how Cursor decides when to activate your skill — write it carefully. You can edit the wording later; this version matches the tools you built in Parts 1–2.
-```
+The `description` field is how Cursor decides when to activate your skill — write it carefully. The description is injected into the Cursor system prompt. You can edit the wording later; this version matches the tools you built in Parts 1–2. You can also invoke the skill yourself: in chat, type `/` and choose **repo-health-analyst** (or type `/repo-health-analyst`).
 
 #### 2. Copy `src/tools.py` to the skill
 
@@ -1415,17 +1459,35 @@ Watch the terminal. The **causal agent** section should show `[Calling get_repo_
 
 A **Cursor Canvas** is a live panel you can open beside chat — useful for structured side-by-side comparisons.
 
-**Install the canvas template** (from the project root):
+**Install the canvas template** (works on macOS, Linux, and Windows):
 
 ```bash
-CANVAS_DIR="$HOME/.cursor/projects/Users-$(whoami)-Gitlab-causal-agent-workshop/canvases"
-mkdir -p "$CANVAS_DIR"
-cp docs/canvas/agent-comparison.canvas.tsx "$CANVAS_DIR/"
+uv run python docs/canvas/install.py
 ```
 
-> **Can't find the folder?** In Cursor, open any `.canvas.tsx` file under your project's `.cursor/projects/.../canvases/` path, or ask your facilitator to share their screen — the terminal comparison in Step 1 is enough if canvas setup is blocked.
+*Or manually copy it:*
+- **macOS / Linux:**
+  ```bash
+  PROJECT_SLUG=$(echo "$PWD" | sed 's|^/||; s|/|-|g')
+  mkdir -p "$HOME/.cursor/projects/$PROJECT_SLUG/canvases"
+  cp docs/canvas/agent-comparison.canvas.tsx "$HOME/.cursor/projects/$PROJECT_SLUG/canvases/"
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  $slug = ($PWD.Path -replace '^/','' -replace '^[A-Za-z]:','' -replace '[\\/]','-').Trim('-')
+  $dest = "$env:USERPROFILE\.cursor\projects\$slug\canvases"
+  New-Item -ItemType Directory -Force -Path $dest
+  Copy-Item docs\canvas\agent-comparison.canvas.tsx $dest\
+  ```
 
-Open `agent-comparison.canvas.tsx` from the file explorer, then click **Open Canvas** in the editor tab to view it beside your terminal.
+> **Why ~/.cursor?** Canvases must live in Cursor's managed project sandbox (`~/.cursor/projects/<slug>/canvases/`) to compile and render live components. Because this directory lives outside your workspace root, it won't appear in the sidebar file explorer.
+
+**To view the canvas in Cursor:**
+1. Press **`Cmd + Shift + P`** (macOS) or **`Ctrl + Shift + P`** (Windows) to open the Command Palette.
+2. Type **`View: Open Canvas`** (or simply **`Open Canvas`**) and press **Enter**.
+3. Cursor opens the dedicated Canvas viewer. In the canvas list, select **`agent-comparison`** to display the live interactive comparison panel beside your terminal!
+
+*(Note: Opening `.canvas.tsx` directly in the editor opens the raw TypeScript source code because VS Code defaults to the code editor for `.tsx` files. The live React renderer is accessed via the `View: Open Canvas` view.)*
 
 The canvas shows:
 
@@ -1482,7 +1544,7 @@ The runtime is the **conductor**, not the musician: it does not host model weigh
 
 **Other production essentials** (beyond what fits in 75 minutes):
 
-- **Monitoring** — latency, task completion, tool-call failures, token cost
+- **Monitoring** — latency, task completion, tool-call failures, token cost (the commented Langfuse lines in `agent.py` are the workshop hook for this)
 - **Evaluation suite** — test repos with expected flag values; rerun after prompt or model changes
 - **Access control** — least-privilege tokens; deployed agents get their own identity and inherited permissions
 - **Fallbacks** — what happens when GitHub rate-limits, Groq is down, or the model skips a tool call

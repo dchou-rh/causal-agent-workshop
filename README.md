@@ -387,6 +387,7 @@ If either line fails:
 - If you used shell exports instead of `.env`, confirm the variables are set (check that `.env` exists and has non-empty values — do not paste tokens into chat to debug)
 - If you get an error about a model not existing or not having access, log into [console.groq.com](https://console.groq.com) and enable the model under **Settings → Organization → Limits** (see Step 7), then run `uv run src/list_models.py` to confirm it appears
 - **Windows only:** If SmartScreen or Smart App Control blocked the command, see [Windows SmartScreen blocked?](#windows-smartscreen-or-smart-app-control-blocked) below
+- **Windows only:** If the GitHub check passes but the Groq check fails with SSL or connection errors, see [Windows: Groq or SSL errors during verification](#windows-groq-or-ssl-errors-during-verification) below
 
 ---
 
@@ -432,6 +433,48 @@ On Windows, `uv run` launches Python from your project's `.venv` folder. If you 
 **If it still blocks:** Search Windows Settings for **Smart App Control**. If it is on and enforcing, try the winget Python steps above first. As a last resort for the workshop, [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux) avoids this issue entirely — clone and run the workshop inside Ubuntu.
 
 **Sometimes works (classic SmartScreen only):** In File Explorer, go to `.venv\Scripts\`, right-click `python.exe` → **Properties** → check **Unblock** → OK. Retry `uv run src/verify.py`. This does not work when Smart App Control is in enforce mode.
+
+### Windows: Groq or SSL errors during verification
+
+If `uv run src/verify.py` passes the GitHub check (`GitHub OK`) but fails on Groq, or if the terminal reports connection errors to `api.groq.com`, check these scenarios:
+
+#### 1. SSL Certificate Verification Failed (`CERTIFICATE_VERIFY_FAILED`)
+On Windows (especially on university Wi-Fi such as eduroam, campus networks, or behind corporate proxies/VPNs), Python's bundled certificates in `certifi` may not recognize the network's SSL/TLS inspection certificates. PyGithub uses `urllib3` which may pass, while `groq` uses `httpx` which triggers:
+```text
+httpx.ConnectError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate
+```
+
+**Fix:** Install `pip-system-certs` so Python uses the Windows Certificate Store:
+```powershell
+uv add pip-system-certs
+uv run src/verify.py
+```
+
+#### 2. Extra quotes or CRLF in `GROQ_API_KEY` (`401 Invalid API Key`)
+In PowerShell or Windows text editors, keys copied into `.env` or set with `$env:GROQ_API_KEY` can accidentally include literal quotation marks (`"gsk_..."`) or hidden Windows carriage returns (`\r`).
+
+**Fix:**
+- Open `.env` in Cursor and ensure the key is plain text with no surrounding single or double quotes:
+  ```env
+  GROQ_API_KEY=gsk_your_key_here
+  ```
+- If you used PowerShell environment variables, set it without nested quotes:
+  ```powershell
+  $env:GROQ_API_KEY = "gsk_your_key_here"
+  ```
+
+#### 3. Diagnostic SSL bypass (Workshop fallback)
+If you are in the live workshop on restricted Wi-Fi and cannot resolve the certificate issue in time, you can temporarily instruct the Groq client in `src/verify.py` (and later in `src/agent.py`) to bypass SSL certificate validation:
+```python
+import httpx
+from groq import DefaultHttpxClient
+
+client = Groq(
+    api_key=os.environ["GROQ_API_KEY"].strip().strip('"').strip("'"),
+    http_client=DefaultHttpxClient(transport=httpx.HTTPTransport(verify=False)),
+)
+```
+*(Use only as a temporary workshop fallback when blocked by campus/proxy SSL inspection.)*
 
 ### Common issues
 

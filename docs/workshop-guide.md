@@ -1415,6 +1415,7 @@ What you built today maps to a production stack — same layers, different packa
 | Knowledge retrieval *(optional)* | — *(not in this workshop)*         | RAG — vector search over docs, playbooks, policies            |
 | Orchestration                    | Groq loop + `SYSTEM_PROMPT`        | Agent runtime — routing, guardrails, memory, fallbacks        |
 | Deploy                           | Agent Skill (`SKILL.md` + scripts) | Skills + MCP + workflow hooks (Slack, CRM, ticketing)         |
+| Operate / monitor *(optional)*   | Commented Langfuse in `agent.py`   | [Langfuse](https://langfuse.com) — traces, spans, tool calls, latency, token cost |
 
 
 **Agent runtime** — the orchestration row above. In **Test**, that is your `run_agent` loop: it calls the Groq API each turn, reads tool-call requests from the model, runs your Python functions, and appends results back into the conversation until the model returns a final answer. In production, the runtime is the same idea at larger scale — often a service or framework (LangGraph, custom Python, Cursor's agent host) that:
@@ -1425,6 +1426,8 @@ What you built today maps to a production stack — same layers, different packa
 - **Handles failures** — retries, alternate model, graceful errors when Groq or GitHub is down
 
 The runtime is the **conductor**, not the musician: it does not host model weights, and it is not your data layer (`tools.py`) or tool server (MCP). Token cost and latency are tracked here because this is where inference calls originate.
+
+**Langfuse** — fits the **operate / monitor** row. In **Test**, the commented `@observe` decorators on `groq_chat`, `run_agent`, and `run_naive_agent` are the workshop hook: uncomment them after setting `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_HOST` in `.env` to record each Groq turn, nested tool calls, and latency. In production, Langfuse (or similar) answers: *Which tool failed? Which prompt version drifted? What did each run cost?*
 
 **MCP (Model Context Protocol)** — standardizes how AI hosts (Cursor, Claude Desktop, internal platforms) discover and call external tools. It fits the **live data / tools** row: one server exposing `get_repo_health` and `analyze_causal_patterns` so every host shares the same governed API, auth, and audit trail. MCP does **not** replace what you learned today:
 

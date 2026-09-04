@@ -991,9 +991,10 @@ def run_agent(user_message: str) -> str:
             for tool_call in msg.tool_calls:
                 fn_name = tool_call.function.name
                 fn_args = json.loads(tool_call.function.arguments)
-                print(f"  [Calling {fn_name}({fn_args})]")
+                print(f"  Calling {fn_name}({fn_args})")
 
-                result = TOOL_FUNCTIONS[fn_name](**fn_args)
+                tool_fn = TOOL_FUNCTIONS.get(fn_name)
+                result = tool_fn(**fn_args)
 
                 messages.append({
                     "role": "tool",
@@ -1083,7 +1084,7 @@ Implement run_agent(user_message):
 - Commented decorator: @observe(name="causal-agent")
 - Agent loop: send messages via groq_chat with tools=TOOLS and model=MODEL
 - If tool_calls returned, execute each function, append results, and loop
-- Print each tool call like: [Calling get_repo_health({'owner': 'pallets', 'repo': 'flask'})]
+- Print each tool call like: `Calling get_repo_health({'owner': 'pallets', 'repo': 'flask'})`
 - Return final text response when no more tool calls
 
 Implement run_naive_agent(user_message):
@@ -1348,13 +1349,15 @@ Watch the terminal. The **causal agent** section should show `[Calling get_repo_
 
 A **Cursor Canvas** is a live panel you can open beside chat — useful for structured side-by-side comparisons.
 
-**Install the canvas template** (works on macOS, Linux, and Windows):
+**Install the canvas template** (from the project root):
 
 ```bash
 uv run python docs/canvas/install.py
 ```
 
-*Or manually copy it:*
+That copies `docs/canvas/agent-comparison.canvas.tsx` into Cursor's managed canvases folder for this workspace. The script prints the destination path when it succeeds.
+
+*Or copy manually if you prefer not to run the script:*
 
 - **macOS / Linux:**
   ```bash
